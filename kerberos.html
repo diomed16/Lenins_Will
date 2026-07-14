@@ -220,35 +220,45 @@
   /* ============ КАРТА КЛЮЧЕЙ (интерактив) ============ */
   .keymap { margin-top: 26px; background: var(--bg-2); border: 1px solid var(--border); border-radius: 16px; padding: 20px 22px; box-shadow: var(--shadow); }
   .keymap > h3 { font-size: 1.2rem; }
-  .keymap-lanes { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
-  .km-lane { background: var(--bg-3); border: 1px solid var(--border); border-radius: 12px; padding: 12px 8px; text-align: center; transition: border-color .25s, box-shadow .25s; }
-  .km-lane.hot { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
-  .km-lane .kmi { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; margin: 0 auto 6px; background: var(--accent-soft); color: var(--accent); }
-  .km-lane .kmi svg { width: 17px; height: 17px; }
-  .km-lane .kmn { font-family: var(--serif); font-weight: 600; font-size: 1.02rem; }
-  .km-lane .kmr { font-family: var(--mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); }
-  .km-lane .kmholds { min-height: 20px; margin-top: 9px; display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+  /* треугольник: KDC на вершине, Клиент и Сервер в основании */
+  .km-tri { position: relative; width: 100%; max-width: 520px; margin: 6px auto 2px; height: clamp(280px, 64vw, 340px); }
+  .km-tri > svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; pointer-events: none; }
+  .km-node { position: absolute; width: clamp(104px, 30%, 150px); box-sizing: border-box; background: var(--bg-3); border: 1px solid var(--border); border-radius: 12px; padding: 11px 8px; text-align: center; transition: border-color .25s, box-shadow .25s; z-index: 2; }
+  .km-node.hot { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .km-node.kdc { top: 0; left: 50%; transform: translateX(-50%); }
+  .km-node.client { bottom: 0; left: 0; }
+  .km-node.svc { bottom: 0; right: 0; }
+  .km-node .kmi { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; margin: 0 auto 6px; background: var(--accent-soft); color: var(--accent); }
+  .km-node .kmi svg { width: 17px; height: 17px; }
+  .km-node .kmn { font-family: var(--serif); font-weight: 600; font-size: 1.02rem; }
+  .km-node .kmr { font-family: var(--mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); }
+  .km-node .kmholds { min-height: 18px; margin-top: 8px; display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
   .km-hold { display: inline-flex; align-items: center; gap: 4px; font-family: var(--mono); font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 999px; border: 1px solid; }
   .km-hold svg { width: 10px; height: 10px; }
-  .km-stage { position: relative; height: 92px; margin: 8px 0 2px; }
-  .km-stage svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
-  .km-guide { stroke: var(--border); stroke-width: 2; stroke-dasharray: 3 6; }
+  .km-guide { stroke: var(--border-2); stroke-width: 2; stroke-dasharray: 3 6; }
   .km-line { stroke: var(--accent); stroke-width: 2.5; stroke-linecap: round; opacity: 0; transition: opacity .2s; }
   .km-line.on { opacity: 1; }
   .km-head { fill: var(--accent); opacity: 0; transition: opacity .2s; }
   .km-head.on { opacity: 1; }
-  .km-packet { position: absolute; top: 50%; left: 0; transform: translate(-50%, -50%); white-space: nowrap; font-family: var(--mono); font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 999px; border: 1px solid; background: var(--bg-3); box-shadow: var(--shadow); opacity: 0; pointer-events: none; display: inline-flex; align-items: center; gap: 5px; }
+  .km-packet { position: absolute; left: 0; top: 0; transform: translate(-50%, -50%); white-space: nowrap; font-family: var(--mono); font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 999px; border: 1px solid; background: var(--bg-3); box-shadow: var(--shadow); opacity: 0; pointer-events: none; display: inline-flex; align-items: center; gap: 5px; z-index: 3; }
   .km-packet svg { width: 12px; height: 12px; }
   .km-packet.show { opacity: 1; }
-  .km-packet.move { transition: left .7s cubic-bezier(.45,.05,.35,1); }
-  .keymap-keys { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .km-packet.move { transition: left .7s cubic-bezier(.45,.05,.35,1), top .7s cubic-bezier(.45,.05,.35,1); }
+  .keymap-keys { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; justify-content: center; }
   .keymap-keys .keychip { cursor: pointer; opacity: .5; filter: grayscale(.35); transition: opacity .18s, filter .18s, box-shadow .18s; }
   .keymap-keys .keychip:hover { opacity: .85; filter: none; }
   .keymap-keys .keychip.sel { opacity: 1; filter: none; box-shadow: 0 0 0 2px currentColor; }
   .km-caption { margin-top: 14px; padding: 13px 15px; border-radius: 10px; background: var(--bg-3); border: 1px solid var(--border); font-size: 14.5px; color: var(--text-dim); line-height: 1.55; }
   .km-caption b { color: var(--text); }
   .km-caption .who { font-family: var(--mono); font-size: 12px; color: var(--accent); display: block; margin-bottom: 6px; }
-  @media (max-width: 620px) { .km-lane .kmr { display: none; } .km-packet { font-size: 11px; padding: 4px 8px; } }
+  /* симулятор: тот же треугольник, узлы держат мини-чипы ключей (гаснут/светятся по шагам) */
+  .sim-tri { height: clamp(300px, 84vw, 380px); margin: 2px auto 14px; }
+  .sim-node { width: clamp(112px, 32%, 162px); }
+  .sim-node .kmholds { gap: 3px; margin-top: 7px; }
+  .sim-node .km-hold { padding: 1px 6px; font-size: 10px; opacity: .38; filter: grayscale(.4); transition: opacity .2s, filter .2s; }
+  .sim-node .km-hold.lit { opacity: 1; filter: none; }
+  .km-packet.msg { border-color: var(--accent); color: var(--accent); }
+  @media (max-width: 620px) { .km-node .kmr { display: none; } .km-node { padding: 9px 6px; } .km-packet { font-size: 11px; padding: 4px 8px; } }
   @media (prefers-reduced-motion: reduce) { .km-packet.move { transition: none; } }
 
   /* ============ ТЕРМИНЫ-ПОДСКАЗКИ ============ */
@@ -780,9 +790,8 @@
 
     <div class="keymap">
       <h3 style="margin-bottom:6px">Пощупайте ключи: у кого какой и что куда движется</h3>
-      <p style="margin:0 0 16px;color:var(--text-dim);font-size:14px">Цвета запоминать не нужно. Выберите ключ внизу — увидите, у кого он есть (дорожки подсветятся) и как что-то, запертое этим ключом, путешествует между участниками.</p>
-      <div class="keymap-lanes" id="kmLanes"></div>
-      <div class="km-stage" id="kmStage"><svg id="kmSvg"></svg><div class="km-packet" id="kmPacket"></div></div>
+      <p style="margin:0 0 16px;color:var(--text-dim);font-size:14px">Цвета запоминать не нужно. Выберите ключ внизу — увидите, у кого он есть (участники подсветятся) и как что-то, запертое этим ключом, путешествует между ними.</p>
+      <div class="km-tri" id="kmTri"><svg id="kmSvg"></svg><div class="km-packet" id="kmPacket"></div></div>
       <div class="keymap-keys" id="kmKeys"></div>
       <div class="km-caption" id="kmCaption"></div>
     </div>
@@ -810,11 +819,8 @@
     <p class="sec-intro">Кликайте по шагам или жмите стрелки — и смотрите на цвет замков. Каждый цвет — свой ключ, и по нему сразу видно, кто способен открыть содержимое, а кто просто носит его с собой. У участников подсвечивается именно то, что задействовано на текущем шаге.</p>
 
     <div class="sim">
-      <!-- участники -->
-      <div class="actors" id="actors"></div>
-
-      <!-- карта потока -->
-      <div class="flowmap"><svg id="flowsvg" viewBox="0 0 600 68" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg></div>
+      <!-- участники + поток сообщения (треугольник) -->
+      <div class="km-tri sim-tri" id="simTri"><svg id="simSvg"></svg><div class="km-packet msg" id="simPacket"></div></div>
 
       <!-- контролы -->
       <div class="stepbar">
@@ -1326,19 +1332,19 @@ K_client = PBKDF2_HMAC_SHA1(пароль, <span class="k">соль</span>, <span
   var kdcIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 7.5h.01M7 16.5h.01"/></svg>';
   var svcIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 9h16M9 20V9"/></svg>';
   var ACTORS = [
-    { id:"client", name:"Клиент", role:"вы + пароль", icon:clientIcon, holds:["client","sk1","sk2"] },
     { id:"kdc",    name:"KDC",    role:"AS · TGS",     icon:kdcIcon,    holds:["client","tgs","service"] },
-    { id:"svc",    name:"Сервис", role:"цель доступа", icon:svcIcon,    holds:["service","sk2"] }
+    { id:"client", name:"Клиент", role:"вы + пароль", icon:clientIcon, holds:["client","sk1","sk2"] },
+    { id:"svc",    name:"Сервер", role:"цель доступа", icon:svcIcon,    holds:["service","sk2"] }
   ];
-  var actorsEl = document.getElementById("actors");
-  actorsEl.innerHTML = ACTORS.map(function (a) {
-    var chips = a.holds.map(function (id) {
-      return '<span class="keychip '+KEYS[id].cls+'" data-k="'+id+'">'+lockSolid+KEYS[id].code+'</span>';
+  var simTri = document.getElementById("simTri");
+  simTri.insertAdjacentHTML("beforeend", ACTORS.map(function (a) {
+    var holds = a.holds.map(function (id) {
+      return '<span class="km-hold '+KEYS[id].cls+'" data-k="'+id+'">'+KEYS[id].code+'</span>';
     }).join("");
-    return '<div class="actor" data-actor="'+a.id+'"><div class="ahead"><span class="adot">'+a.icon+
-      '</span><div><div class="aname">'+a.name+'</div><div class="arole">'+a.role+'</div></div></div>'+
-      '<div class="aholds"><span class="kh-label">знает ключи:</span>'+chips+'</div></div>';
-  }).join("");
+    return '<div class="km-node sim-node '+a.id+'" data-node="'+a.id+'"><div class="kmi">'+a.icon+'</div>'+
+      '<div class="kmn">'+a.name+'</div><div class="kmr">'+a.role+'</div>'+
+      '<div class="kmholds">'+holds+'</div></div>';
+  }).join(""));
 
   /* ---------- ШАГИ ПРОТОКОЛА ---------- */
   var STEPS = [
@@ -1410,61 +1416,37 @@ K_client = PBKDF2_HMAC_SHA1(пароль, <span class="k">соль</span>, <span
     }
   ];
 
-  /* ---------- ОТРИСОВКА КАРТЫ ПОТОКА ---------- */
-  var svg = document.getElementById("flowsvg");
-  var NODES = { client:{x:70,label:"Клиент"}, kdc:{x:300,label:"KDC"}, svc:{x:530,label:"Сервис"} };
-  var NY = 24, dotAnim = null;
-  function buildMap() {
-    var s = '';
-    // горизонтальная линия
-    s += '<line class="lane" x1="70" y1="'+NY+'" x2="530" y2="'+NY+'"/>';
-    // узлы
-    Object.keys(NODES).forEach(function (id) {
-      var n = NODES[id];
-      s += '<circle class="node" data-node="'+id+'" cx="'+n.x+'" cy="'+NY+'" r="9"/>';
-      s += '<text class="nlabel" x="'+n.x+'" y="'+(NY+30)+'" text-anchor="middle">'+n.label+'</text>';
-    });
-    // активная линия сообщения + стрелка + движущаяся точка
-    s += '<line class="msgline" id="msgline" x1="70" y1="'+NY+'" x2="70" y2="'+NY+'" style="opacity:0"/>';
-    s += '<polygon class="arrow" id="arrow" points="0,0 0,0 0,0" style="opacity:0"/>';
-    s += '<circle class="dot" id="dot" cx="70" cy="'+NY+'" r="5" style="opacity:0"/>';
-    svg.innerHTML = s;
+  /* ---------- ОТРИСОВКА ПОТОКА (треугольник) ---------- */
+  var simSvg = document.getElementById("simSvg");
+  var simPacket = document.getElementById("simPacket");
+  var msgTimer = null;
+  function simCenter(id) {
+    var el = simTri.querySelector('.km-node[data-node="' + id + '"]');
+    var r = el.getBoundingClientRect(), t = simTri.getBoundingClientRect();
+    return { x: r.left - t.left + r.width / 2, y: r.top - t.top + r.height / 2 };
   }
-  buildMap();
-
-  function drawArrowHead(x, y, dir) {
-    var a = document.getElementById("arrow");
-    var w = 7;
-    var pts = dir > 0
-      ? [x, y, x - w, y - 5, x - w, y + 5]
-      : [x, y, x + w, y + 5, x + w, y - 5];
-    a.setAttribute("points", pts.join(" "));
-    a.style.opacity = "1";
-  }
-
   function animateMessage(step) {
-    var from = NODES[step.from], to = NODES[step.to];
-    var line = document.getElementById("msgline"), dot = document.getElementById("dot");
-    var dir = to.x > from.x ? 1 : -1;
-    line.setAttribute("x1", from.x); line.setAttribute("x2", to.x);
-    line.setAttribute("y1", NY); line.setAttribute("y2", NY);
-    line.style.opacity = "1";
-    // стрелка чуть не доходя узла
-    drawArrowHead(to.x - dir * 11, NY, dir);
-    // подсветка узлов
-    svg.querySelectorAll(".node").forEach(function (n) {
-      n.classList.toggle("hot", n.getAttribute("data-node") === step.from || n.getAttribute("data-node") === step.to);
-    });
-    // движущаяся точка
-    if (dotAnim) { clearInterval(dotAnim); dotAnim = null; }
-    if (reduceMotion) { dot.style.opacity = "0"; return; }
-    dot.style.opacity = "1";
-    var t = 0;
-    dotAnim = setInterval(function () {
-      t += 0.045;
-      if (t >= 1) { t = 1; clearInterval(dotAnim); dotAnim = null; dot.style.opacity = "0"; }
-      dot.setAttribute("cx", from.x + (to.x - from.x) * t);
-    }, 16);
+    var C = { client: simCenter("client"), kdc: simCenter("kdc"), svc: simCenter("svc") };
+    var edges = [["client", "kdc"], ["kdc", "svc"], ["svc", "client"]];
+    var s = "";
+    edges.forEach(function (e) { var a = C[e[0]], b = C[e[1]]; s += '<line class="km-guide" x1="' + a.x + '" y1="' + a.y + '" x2="' + b.x + '" y2="' + b.y + '"/>'; });
+    var A = C[step.from], B = C[step.to];
+    var dx = B.x - A.x, dy = B.y - A.y, len = Math.sqrt(dx * dx + dy * dy) || 1, ux = dx / len, uy = dy / len;
+    var off = Math.min(58, len * 0.34);
+    var sx = A.x + ux * off, sy = A.y + uy * off, ex = B.x - ux * off, ey = B.y - uy * off;
+    var hl = 11, hw = 6, bx = ex - ux * hl, by = ey - uy * hl, nx = -uy, ny = ux;
+    s += '<line class="km-line on" x1="' + sx + '" y1="' + sy + '" x2="' + ex + '" y2="' + ey + '"/>';
+    s += '<polygon class="km-head on" points="' + ex + ',' + ey + ' ' + (bx + nx * hw) + ',' + (by + ny * hw) + ' ' + (bx - nx * hw) + ',' + (by - ny * hw) + '"/>';
+    simSvg.innerHTML = s;
+    simPacket.className = "km-packet msg";
+    simPacket.textContent = step.msg;
+    if (msgTimer) { clearTimeout(msgTimer); msgTimer = null; }
+    simPacket.classList.remove("move");
+    simPacket.style.left = sx + "px"; simPacket.style.top = sy + "px";
+    simPacket.classList.add("show");
+    if (reduceMotion) { simPacket.style.left = ex + "px"; simPacket.style.top = ey + "px"; return; }
+    void simPacket.offsetWidth;
+    msgTimer = setTimeout(function () { simPacket.classList.add("move"); simPacket.style.left = ex + "px"; simPacket.style.top = ey + "px"; }, 30);
   }
 
   /* ---------- ОТРИСОВКА ШАГА ---------- */
@@ -1501,12 +1483,12 @@ K_client = PBKDF2_HMAC_SHA1(пароль, <span class="k">соль</span>, <span
     }).join("");
     envelope.innerHTML = '<div class="etitle">Что внутри сообщения '+s.msg+'</div>'+fields;
 
-    // подсветка участников
-    document.querySelectorAll(".actor").forEach(function (el) {
-      var id = el.getAttribute("data-actor");
+    // подсветка участников (узлы треугольника) и активных ключей
+    simTri.querySelectorAll(".km-node").forEach(function (el) {
+      var id = el.getAttribute("data-node");
       el.classList.toggle("hot", s.hot.indexOf(id) !== -1);
       var lit = (s.lit && s.lit[id]) || [];
-      el.querySelectorAll(".aholds .keychip").forEach(function (c) {
+      el.querySelectorAll(".km-hold").forEach(function (c) {
         c.classList.toggle("lit", lit.indexOf(c.getAttribute("data-k")) !== -1);
       });
     });
@@ -2157,10 +2139,10 @@ K_client = PBKDF2_HMAC_SHA1(пароль, <span class="k">соль</span>, <span
 </script>
 
 <script>
-/* ============ КАРТА КЛЮЧЕЙ (интерактив вместо легенды) ============ */
+/* ============ КАРТА КЛЮЧЕЙ (треугольник: Клиент · KDC · Сервер) ============ */
 (function () {
   "use strict";
-  var stage = document.getElementById("kmStage"); if (!stage) return;
+  var tri = document.getElementById("kmTri"); if (!tri) return;
   var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
   var lock = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
   var icons = {
@@ -2168,12 +2150,12 @@ K_client = PBKDF2_HMAC_SHA1(пароль, <span class="k">соль</span>, <span
     kdc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 7.5h.01M7 16.5h.01"/></svg>',
     svc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 9h16M9 20V9"/></svg>'
   };
-  var LANES = [
-    { id:"client", name:"Клиент", role:"вы + пароль" },
+  var NODES = [
     { id:"kdc",    name:"KDC",    role:"AS · TGS" },
-    { id:"svc",    name:"Служба", role:"цель" }
+    { id:"client", name:"Клиент", role:"вы + пароль" },
+    { id:"svc",    name:"Сервер", role:"цель" }
   ];
-  var laneIdx = { client:0, kdc:1, svc:2 };
+  var nameById = { kdc:"KDC", client:"Клиент", svc:"Сервер" };
   var KEYS = [
     { id:"client", cls:"k-client", code:"K_client", holders:["client","kdc"], from:"client", to:"kdc", packet:"метка времени",
       text:"<b>Ключ клиента</b> выведен из пароля. Одна и та же копия есть у клиента и у KDC — по сети он не ездит. Клиент шифрует им метку времени и шлёт KDC: расшифровать сможет только тот, у кого такой же ключ." },
@@ -2182,64 +2164,67 @@ K_client = PBKDF2_HMAC_SHA1(пароль, <span class="k">соль</span>, <span
     { id:"tgs", cls:"k-tgs", code:"K_TGS", holders:["kdc"], from:"kdc", to:"client", packet:"TGT",
       text:"<b>K_TGS</b> (ключ учётки krbtgt) знает только KDC. Им запечатывается каждый TGT. Билет уезжает к клиенту, но открыть его тот не может — только принести обратно в KDC. Утечёт этот ключ — можно подделать любой билет." },
     { id:"sk2", cls:"k-sk2", code:"SK2", holders:["client","svc"], from:"client", to:"svc", packet:"аутентификатор",
-      text:"<b>SK2</b> — сеансовый ключ между клиентом и службой. Его создаёт TGS и раздаёт обоим. Им клиент и служба защищают своё общение напрямую." },
+      text:"<b>SK2</b> — сеансовый ключ между клиентом и сервером. Его создаёт TGS и раздаёт обоим. Им клиент и сервер защищают своё общение напрямую." },
     { id:"service", cls:"k-service", code:"K_service", holders:["kdc","svc"], from:"kdc", to:"svc", packet:"ST",
-      text:"<b>K_service</b> выведен из пароля службы; копия есть у самой службы и у KDC. KDC запечатывает им билет (ST). Клиент несёт билет службе, но открыть его может только сама служба." }
+      text:"<b>K_service</b> выведен из пароля сервера; копия есть у самого сервера и у KDC. KDC запечатывает им билет (ST). Клиент несёт билет серверу, но открыть его может только сам сервер." }
   ];
 
-  var lanesEl = document.getElementById("kmLanes");
-  lanesEl.innerHTML = LANES.map(function (l) {
-    return '<div class="km-lane" data-lane="' + l.id + '"><div class="kmi">' + icons[l.id] + '</div>' +
-      '<div class="kmn">' + l.name + '</div><div class="kmr">' + l.role + '</div>' +
-      '<div class="kmholds" data-holds="' + l.id + '"></div></div>';
-  }).join("");
+  var svg = document.getElementById("kmSvg");
+  var packet = document.getElementById("kmPacket");
+  var caption = document.getElementById("kmCaption");
+  // узлы треугольника
+  tri.insertAdjacentHTML("beforeend", NODES.map(function (n) {
+    return '<div class="km-node ' + n.id + '" data-node="' + n.id + '"><div class="kmi">' + icons[n.id] + '</div>' +
+      '<div class="kmn">' + n.name + '</div><div class="kmr">' + n.role + '</div>' +
+      '<div class="kmholds" data-holds="' + n.id + '"></div></div>';
+  }).join(""));
 
   var keysEl = document.getElementById("kmKeys");
   keysEl.innerHTML = KEYS.map(function (k) {
     return '<button type="button" class="keychip ' + k.cls + '" data-key="' + k.id + '">' + lock + k.code + '</button>';
   }).join("");
 
-  var svg = document.getElementById("kmSvg");
-  var packet = document.getElementById("kmPacket");
-  var caption = document.getElementById("kmCaption");
-  var laneName = function (id) { return LANES[laneIdx[id]].name; };
   var current = KEYS[0].id, animTimer = null;
-
-  function laneCX(i, W) { return W * (i * 2 + 1) / 6; }
+  function centerOf(id) {
+    var el = tri.querySelector('.km-node[data-node="' + id + '"]');
+    var r = el.getBoundingClientRect(), t = tri.getBoundingClientRect();
+    return { x: r.left - t.left + r.width / 2, y: r.top - t.top + r.height / 2 };
+  }
 
   function draw(k) {
-    var W = svg.clientWidth || stage.clientWidth || 600, H = svg.clientHeight || 92;
+    var C = { client: centerOf("client"), kdc: centerOf("kdc"), svc: centerOf("svc") };
+    var edges = [["client", "kdc"], ["kdc", "svc"], ["svc", "client"]];
     var s = "";
-    for (var i = 0; i < 3; i++) { var x = laneCX(i, W); s += '<line class="km-guide" x1="' + x + '" y1="10" x2="' + x + '" y2="' + (H - 10) + '"/>'; }
-    var fi = laneIdx[k.from], ti = laneIdx[k.to], fx = laneCX(fi, W), tx = laneCX(ti, W), y = H / 2;
-    var dir = tx > fx ? 1 : -1, hx = tx - dir * 9;
-    s += '<line class="km-line on" x1="' + fx + '" y1="' + y + '" x2="' + tx + '" y2="' + y + '"/>';
-    s += '<polygon class="km-head on" points="' + tx + ',' + y + ' ' + hx + ',' + (y - 5) + ' ' + hx + ',' + (y + 5) + '"/>';
+    edges.forEach(function (e) { var a = C[e[0]], b = C[e[1]]; s += '<line class="km-guide" x1="' + a.x + '" y1="' + a.y + '" x2="' + b.x + '" y2="' + b.y + '"/>'; });
+    var A = C[k.from], B = C[k.to];
+    var dx = B.x - A.x, dy = B.y - A.y, len = Math.sqrt(dx * dx + dy * dy) || 1, ux = dx / len, uy = dy / len;
+    var off = Math.min(54, len * 0.34);
+    var sx = A.x + ux * off, sy = A.y + uy * off, ex = B.x - ux * off, ey = B.y - uy * off;
+    var hl = 11, hw = 6, bx = ex - ux * hl, by = ey - uy * hl, nx = -uy, ny = ux;
+    s += '<line class="km-line on" x1="' + sx + '" y1="' + sy + '" x2="' + ex + '" y2="' + ey + '"/>';
+    s += '<polygon class="km-head on" points="' + ex + ',' + ey + ' ' + (bx + nx * hw) + ',' + (by + ny * hw) + ' ' + (bx - nx * hw) + ',' + (by - ny * hw) + '"/>';
     svg.innerHTML = s;
-    // packet
-    var fracFrom = (fi * 2 + 1) / 6 * 100, fracTo = (ti * 2 + 1) / 6 * 100;
     packet.className = "km-packet " + k.cls;
     packet.innerHTML = lock + k.packet;
     if (animTimer) { clearTimeout(animTimer); animTimer = null; }
     packet.classList.remove("move");
-    packet.style.left = fracFrom + "%";
+    packet.style.left = sx + "px"; packet.style.top = sy + "px";
     packet.classList.add("show");
-    if (reduce) { packet.style.left = fracTo + "%"; return; }
-    // force reflow, then animate
+    if (reduce) { packet.style.left = ex + "px"; packet.style.top = ey + "px"; return; }
     void packet.offsetWidth;
-    animTimer = setTimeout(function () { packet.classList.add("move"); packet.style.left = fracTo + "%"; }, 30);
+    animTimer = setTimeout(function () { packet.classList.add("move"); packet.style.left = ex + "px"; packet.style.top = ey + "px"; }, 30);
   }
 
   function select(id) {
     current = id;
     var k = KEYS.filter(function (x) { return x.id === id; })[0]; if (!k) return;
-    lanesEl.querySelectorAll(".km-lane").forEach(function (el) { el.classList.toggle("hot", k.holders.indexOf(el.getAttribute("data-lane")) !== -1); });
-    LANES.forEach(function (l) {
-      var box = lanesEl.querySelector('[data-holds="' + l.id + '"]');
-      box.innerHTML = k.holders.indexOf(l.id) !== -1 ? '<span class="km-hold ' + k.cls + '">' + lock + k.code + '</span>' : "";
+    tri.querySelectorAll(".km-node").forEach(function (el) { el.classList.toggle("hot", k.holders.indexOf(el.getAttribute("data-node")) !== -1); });
+    NODES.forEach(function (n) {
+      var box = tri.querySelector('[data-holds="' + n.id + '"]');
+      box.innerHTML = k.holders.indexOf(n.id) !== -1 ? '<span class="km-hold ' + k.cls + '">' + lock + k.code + '</span>' : "";
     });
     keysEl.querySelectorAll(".keychip").forEach(function (b) { b.classList.toggle("sel", b.getAttribute("data-key") === id); });
-    var who = k.holders.map(laneName).join(" и ");
+    var who = k.holders.map(function (h) { return nameById[h]; }).join(" и ");
     caption.innerHTML = '<span class="who">🔑 есть у: ' + who + '</span>' + k.text;
     draw(k);
   }
