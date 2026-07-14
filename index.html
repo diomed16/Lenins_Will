@@ -1,0 +1,275 @@
+﻿<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LearningPlatform — интерактивные курсы</title>
+</head>
+<body>
+<style>
+  :root {
+    --bg:#eef0f3; --bg-2:#f8f9fb; --bg-3:#ffffff; --border:#d5dae2; --border-2:#c3cad4;
+    --text:#18202c; --text-dim:#5a6675; --text-faint:#8a94a2;
+    --accent:#9a6a12; --accent-2:#b98526; --accent-soft:rgba(154,106,18,.10);
+    --ok:#2f7d46;
+    --auth:#9a6b12; --auth-bg:rgba(154,107,18,.12);
+    --net:#157f73;  --net-bg:rgba(21,127,115,.12);
+    --ad:#5f49b8;   --ad-bg:rgba(95,73,184,.12);
+    --devops:#3f8c31; --devops-bg:rgba(63,140,49,.12);
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,"Times New Roman",serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    --mono:"SFMono-Regular",ui-monospace,"Cascadia Code",Consolas,"Liberation Mono",Menlo,monospace;
+    --r:14px; --shadow:0 1px 2px rgba(20,28,40,.06),0 8px 24px rgba(20,28,40,.06); --maxw:1120px;
+  }
+  @media (prefers-color-scheme: dark){ :root{
+    --bg:#0e1520; --bg-2:#16202e; --bg-3:#1c2836; --border:#2a3646; --border-2:#38485c;
+    --text:#e7ecf3; --text-dim:#9fabbd; --text-faint:#6e7c8f;
+    --accent:#e0b25a; --accent-2:#d4a24a; --accent-soft:rgba(224,178,90,.12); --ok:#6ec27a;
+    --auth:#e6b957; --auth-bg:rgba(230,185,87,.13);
+    --net:#4fc2b4;  --net-bg:rgba(79,194,180,.13);
+    --ad:#a591ec;   --ad-bg:rgba(165,145,236,.14);
+    --devops:#79cf68; --devops-bg:rgba(121,207,104,.13);
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+  } }
+  :root[data-theme="dark"]{
+    --bg:#0e1520; --bg-2:#16202e; --bg-3:#1c2836; --border:#2a3646; --border-2:#38485c;
+    --text:#e7ecf3; --text-dim:#9fabbd; --text-faint:#6e7c8f;
+    --accent:#e0b25a; --accent-2:#d4a24a; --accent-soft:rgba(224,178,90,.12); --ok:#6ec27a;
+    --auth:#e6b957; --auth-bg:rgba(230,185,87,.13); --net:#4fc2b4; --net-bg:rgba(79,194,180,.13);
+    --ad:#a591ec; --ad-bg:rgba(165,145,236,.14); --devops:#79cf68; --devops-bg:rgba(121,207,104,.13);
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+  }
+  :root[data-theme="light"]{
+    --bg:#eef0f3; --bg-2:#f8f9fb; --bg-3:#ffffff; --border:#d5dae2; --border-2:#c3cad4;
+    --text:#18202c; --text-dim:#5a6675; --text-faint:#8a94a2;
+    --accent:#9a6a12; --accent-2:#b98526; --accent-soft:rgba(154,106,18,.10); --ok:#2f7d46;
+    --auth:#9a6b12; --auth-bg:rgba(154,107,18,.12); --net:#157f73; --net-bg:rgba(21,127,115,.12);
+    --ad:#5f49b8; --ad-bg:rgba(95,73,184,.12); --devops:#3f8c31; --devops-bg:rgba(63,140,49,.12);
+    --shadow:0 1px 2px rgba(20,28,40,.06),0 8px 24px rgba(20,28,40,.06);
+  }
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; }
+  @media (prefers-reduced-motion: reduce){ html{ scroll-behavior:auto; } }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); font-size:17px; line-height:1.6; -webkit-font-smoothing:antialiased; }
+  h1,h2,h3 { font-family:var(--serif); font-weight:600; text-wrap:balance; line-height:1.14; margin:0; }
+  a { color:var(--accent); }
+  .wrap { max-width:var(--maxw); margin:0 auto; padding:0 22px; }
+  :focus-visible { outline:2px solid var(--accent); outline-offset:2px; border-radius:6px; }
+
+  header.nav { position:sticky; top:0; z-index:50; background:color-mix(in srgb,var(--bg) 84%,transparent); backdrop-filter:blur(12px) saturate(1.2); border-bottom:1px solid var(--border); }
+  .nav-in { display:flex; align-items:center; gap:16px; height:60px; }
+  .brand { display:flex; align-items:center; gap:10px; font-family:var(--serif); font-weight:600; font-size:19px; }
+  .brand svg { width:26px; height:26px; color:var(--accent); flex:none; }
+  .nav-right { margin-left:auto; display:flex; align-items:center; gap:12px; }
+  .nav-right a { color:var(--text-dim); text-decoration:none; font-size:14px; font-weight:500; padding:7px 11px; border-radius:8px; }
+  .nav-right a:hover { color:var(--text); background:var(--bg-3); }
+  .theme-btn { width:38px; height:38px; border-radius:9px; border:1px solid var(--border); background:var(--bg-3); color:var(--text-dim); cursor:pointer; display:grid; place-items:center; }
+  .theme-btn:hover { color:var(--accent); border-color:var(--border-2); }
+  .theme-btn svg { width:18px; height:18px; }
+
+  .hero { position:relative; padding:80px 0 40px; overflow:hidden; }
+  .hero::before { content:""; position:absolute; inset:0; z-index:-1; background:radial-gradient(680px 360px at 82% 4%,var(--accent-soft),transparent 70%),radial-gradient(520px 300px at 4% 96%,var(--net-bg),transparent 72%); }
+  .eyebrow { font-family:var(--mono); font-size:12.5px; letter-spacing:.22em; text-transform:uppercase; color:var(--accent); margin-bottom:18px; }
+  .hero h1 { font-size:clamp(2.5rem,6.5vw,4.4rem); letter-spacing:-.02em; }
+  .hero .sub { display:block; font-size:clamp(1.02rem,2.4vw,1.4rem); font-weight:400; color:var(--text-dim); margin-top:18px; max-width:44ch; line-height:1.45; }
+  .stats { display:flex; gap:28px; margin-top:30px; flex-wrap:wrap; }
+  .stat { display:flex; flex-direction:column; }
+  .stat b { font-family:var(--serif); font-size:2rem; line-height:1; color:var(--text); }
+  .stat span { font-size:12.5px; color:var(--text-faint); font-family:var(--mono); letter-spacing:.06em; text-transform:uppercase; margin-top:6px; }
+
+  .catalog { padding:24px 0 70px; }
+  .filters { display:flex; gap:8px; flex-wrap:wrap; margin-bottom:24px; }
+  .chip { font:inherit; font-size:14px; font-weight:500; padding:8px 15px; border-radius:999px; border:1px solid var(--border); background:var(--bg-3); color:var(--text-dim); cursor:pointer; transition:all .15s; }
+  .chip:hover { border-color:var(--border-2); color:var(--text); }
+  .chip.active { background:var(--accent); border-color:var(--accent); color:#14100a; }
+
+  .grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:18px; }
+  .course { position:relative; background:var(--bg-3); border:1px solid var(--border); border-radius:var(--r); padding:22px; box-shadow:var(--shadow); display:flex; flex-direction:column; gap:12px; overflow:hidden; transition:transform .14s, border-color .15s; }
+  .course::before { content:""; position:absolute; left:0; top:0; bottom:0; width:3px; background:var(--tc,var(--accent)); }
+  .course.ready:hover { transform:translateY(-3px); border-color:var(--tc,var(--accent)); }
+  .course.soon { opacity:.72; }
+  .c-top { display:flex; align-items:center; justify-content:space-between; gap:10px; }
+  .c-track { font-family:var(--mono); font-size:11px; letter-spacing:.08em; text-transform:uppercase; font-weight:600; color:var(--tc,var(--accent)); background:var(--tcb,var(--accent-soft)); padding:3px 9px; border-radius:999px; }
+  .c-status { font-family:var(--mono); font-size:10.5px; font-weight:700; letter-spacing:.06em; text-transform:uppercase; padding:3px 9px; border-radius:999px; }
+  .c-status.ready { color:var(--ok); background:color-mix(in srgb,var(--ok) 13%,transparent); border:1px solid color-mix(in srgb,var(--ok) 32%,transparent); }
+  .c-status.soon { color:var(--text-faint); background:var(--bg-2); border:1px solid var(--border); }
+  .course h3 { font-size:1.35rem; letter-spacing:-.01em; }
+  .course p { font-size:14px; color:var(--text-dim); margin:0; flex:1; }
+  .c-tags { display:flex; gap:6px; flex-wrap:wrap; }
+  .c-tags span { font-size:11.5px; color:var(--text-faint); background:var(--bg-2); border:1px solid var(--border); padding:2px 8px; border-radius:6px; }
+  .c-foot { display:flex; align-items:center; justify-content:space-between; gap:10px; margin-top:4px; padding-top:14px; border-top:1px solid var(--border); }
+  .c-meta { font-family:var(--mono); font-size:11.5px; color:var(--text-faint); line-height:1.4; }
+  .btn { display:inline-flex; align-items:center; gap:7px; font:inherit; font-weight:600; font-size:14px; padding:9px 15px; border-radius:9px; border:1px solid transparent; cursor:pointer; text-decoration:none; white-space:nowrap; transition:background .15s, border-color .15s; }
+  .btn.primary { background:var(--tc,var(--accent)); color:#fff; }
+  .btn.primary:hover { filter:brightness(1.08); }
+  .btn.soon { background:transparent; color:var(--text-faint); border-color:var(--border); cursor:default; }
+  .empty { color:var(--text-faint); font-size:14px; padding:30px 0; text-align:center; }
+
+  .addbox { margin-top:34px; background:var(--bg-3); border:1px solid var(--border); border-radius:var(--r); padding:24px; box-shadow:var(--shadow); display:flex; gap:18px; align-items:center; flex-wrap:wrap; }
+  .addbox .ic { width:46px; height:46px; border-radius:12px; display:grid; place-items:center; background:var(--accent-soft); color:var(--accent); flex:none; }
+  .addbox .ic svg { width:24px; height:24px; }
+  .addbox h3 { font-size:1.15rem; margin-bottom:4px; }
+  .addbox p { font-size:14px; color:var(--text-dim); margin:0; max-width:62ch; }
+  .addbox .btn { margin-left:auto; background:var(--bg-2); color:var(--text); border-color:var(--border); }
+  .addbox .btn:hover { border-color:var(--border-2); }
+  @media (max-width:620px){ .addbox .btn { margin-left:0; } }
+
+  footer { padding:36px 0 56px; border-top:1px solid var(--border); color:var(--text-faint); font-size:13.5px; }
+  footer .wrap { display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; align-items:center; }
+</style>
+
+<header class="nav">
+  <div class="wrap nav-in">
+    <span class="brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l9-3 9 3-9 3-9-3Z"/><path d="M21 6v6"/><path d="M6 8.5V13c0 1.7 2.7 3 6 3s6-1.3 6-3V8.5"/></svg>
+      LearningPlatform
+    </span>
+    <div class="nav-right">
+      <a href="#catalog">Курсы</a>
+      <a href="#add">Добавить курс</a>
+      <button class="theme-btn" id="themeBtn" aria-label="Переключить тему">
+        <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></svg>
+      </button>
+    </div>
+  </div>
+</header>
+
+<div class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Инфраструктура · безопасность · сети</div>
+    <h1>Разбираемся в сложном —<br>по шагам и руками</h1>
+    <span class="sub">Интерактивные курсы с пошаговыми симуляторами, живыми диаграммами, карточками и экзаменами. Каждый — один файл, работает офлайн.</span>
+    <div class="stats" id="stats"></div>
+  </div>
+</div>
+
+<main>
+<section class="catalog" id="catalog">
+  <div class="wrap">
+    <div class="filters" id="filters"></div>
+    <div class="grid" id="grid"></div>
+    <div class="empty" id="empty" style="display:none">В этой категории пока нет курсов — скоро появятся.</div>
+
+    <div class="addbox" id="add">
+      <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div>
+      <div>
+        <h3>Добавить свой курс</h3>
+        <p>Все курсы собраны на одном шаблоне: содержимое задаётся одним объектом <code>COURSE</code>, движок трогать не нужно. Скопируйте шаблон, замените данные — и новый курс готов в том же стиле.</p>
+      </div>
+      <a class="btn" href="dns.html">Открыть шаблон →</a>
+    </div>
+  </div>
+</section>
+</main>
+
+<footer>
+  <div class="wrap">
+    <span id="footCount"></span>
+    <span>LearningPlatform · каждый курс — самодостаточный HTML, работает офлайн.</span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+
+  /* ==== КАТАЛОГ КУРСОВ ====
+     Добавить курс = дописать объект. Поля:
+     title, desc, track ('auth'|'net'|'ad'|'devops'), status ('ready'|'soon'),
+     href (для готовых), meta (короткая строка), tags[]. */
+  var TRACKS = { auth:"Аутентификация", net:"Сети", ad:"Windows · AD", devops:"Linux · DevOps" };
+
+  var COURSES = [
+    { title:"Kerberos", track:"auth", status:"ready", href:"kerberos.html",
+      desc:"Как трёхголовый страж пускает вас в сеть, ни разу не передав пароль. Пять уровней — от основ до внутренностей (etypes, PAC, FAST, S4U).",
+      meta:"5 уровней · симулятор · лаба · экзамен", tags:["билеты","AD","криптография"] },
+    { title:"Как работает DNS", track:"net", status:"ready", href:"dns.html",
+      desc:"Путь имени example.com до IP-адреса: рекурсия, итерация, referral и кэш — в пошаговом симуляторе. (Он же — образец шаблона.)",
+      meta:"3 уровня · симулятор · экзамен", tags:["резолвинг","TTL","записи"] },
+
+    { title:"TLS 1.3 — рукопожатие", track:"auth", status:"soon",
+      desc:"ClientHello, обмен ключами, сертификаты и как устанавливается защищённый канал за один round-trip.", tags:["HTTPS","сертификаты"] },
+    { title:"OAuth 2.0 и OIDC", track:"auth", status:"soon",
+      desc:"Токены доступа, авторизационный код, PKCE и чем OpenID Connect отличается от OAuth.", tags:["токены","SSO"] },
+    { title:"LDAP и Active Directory", track:"ad", status:"soon",
+      desc:"Дерево каталога, DN, bind и поиск — как устроено хранилище, поверх которого живёт AD.", tags:["каталог","bind"] },
+    { title:"NTLM", track:"ad", status:"soon",
+      desc:"Challenge-response, хэши и почему NTLM до сих пор с нами — и чем опасен.", tags:["хэши","legacy"] },
+    { title:"HTTP и HTTPS", track:"net", status:"soon",
+      desc:"Запрос, ответ, методы, заголовки и коды состояния — фундамент веба по шагам.", tags:["веб","заголовки"] },
+    { title:"SSH", track:"devops", status:"soon",
+      desc:"Обмен ключами, аутентификация по ключу, туннели и проброс портов.", tags:["ключи","туннели"] },
+    { title:"Контейнеры: namespaces и cgroups", track:"devops", status:"soon",
+      desc:"Из чего на самом деле сделан контейнер: изоляция и лимиты ресурсов в ядре Linux.", tags:["Docker","ядро"] }
+  ];
+
+  var esc = function (s) { return String(s).replace(/[&<>]/g, function (c) { return { "&":"&amp;","<":"&lt;",">":"&gt;" }[c]; }); };
+  var grid = document.getElementById("grid"), empty = document.getElementById("empty");
+  var filter = "all";
+
+  function trackVars(t) { return "--tc:var(--" + t + ");--tcb:var(--" + t + "-bg)"; }
+
+  function card(c) {
+    var ready = c.status === "ready";
+    var cta = ready
+      ? '<a class="btn primary" href="' + c.href + '">Открыть <svg viewBox="0 0 24 24" width="14" height="14" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>'
+      : '<span class="btn soon">Скоро</span>';
+    return '<article class="course ' + c.status + '" data-track="' + c.track + '" style="' + trackVars(c.track) + '">' +
+      '<div class="c-top"><span class="c-track">' + esc(TRACKS[c.track]) + '</span>' +
+        '<span class="c-status ' + c.status + '">' + (ready ? "Готов" : "Скоро") + '</span></div>' +
+      '<h3>' + esc(c.title) + '</h3><p>' + esc(c.desc) + '</p>' +
+      '<div class="c-tags">' + (c.tags || []).map(function (t) { return '<span>' + esc(t) + '</span>'; }).join("") + '</div>' +
+      '<div class="c-foot"><span class="c-meta">' + esc(c.meta || (ready ? "" : "в разработке")) + '</span>' + cta + '</div></article>';
+  }
+
+  function sortCourses(list) {
+    return list.slice().sort(function (a, b) {
+      if (a.status !== b.status) return a.status === "ready" ? -1 : 1;
+      return 0;
+    });
+  }
+
+  function render() {
+    var list = sortCourses(COURSES).filter(function (c) { return filter === "all" || c.track === filter; });
+    grid.innerHTML = list.map(card).join("");
+    empty.style.display = list.length ? "none" : "block";
+  }
+
+  /* фильтры */
+  var counts = {}; COURSES.forEach(function (c) { counts[c.track] = (counts[c.track] || 0) + 1; });
+  var chips = [{ k:"all", label:"Все курсы" }].concat(Object.keys(TRACKS).map(function (k) { return { k:k, label:TRACKS[k] }; }));
+  var filtersEl = document.getElementById("filters");
+  filtersEl.innerHTML = chips.map(function (c) {
+    var n = c.k === "all" ? COURSES.length : (counts[c.k] || 0);
+    return '<button class="chip' + (c.k === "all" ? " active" : "") + '" data-f="' + c.k + '">' + esc(c.label) + ' · ' + n + '</button>';
+  }).join("");
+  filtersEl.addEventListener("click", function (e) {
+    var b = e.target.closest(".chip"); if (!b) return;
+    filter = b.getAttribute("data-f");
+    filtersEl.querySelectorAll(".chip").forEach(function (x) { x.classList.toggle("active", x === b); });
+    render();
+  });
+
+  /* статистика */
+  var ready = COURSES.filter(function (c) { return c.status === "ready"; }).length;
+  document.getElementById("stats").innerHTML =
+    '<div class="stat"><b>' + COURSES.length + '</b><span>курсов в каталоге</span></div>' +
+    '<div class="stat"><b>' + ready + '</b><span>готовы сейчас</span></div>' +
+    '<div class="stat"><b>' + Object.keys(TRACKS).length + '</b><span>направления</span></div>';
+  document.getElementById("footCount").textContent = COURSES.length + " курсов · " + ready + " готовы";
+
+  render();
+
+  /* тема */
+  var root = document.documentElement;
+  var sun = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+  var moon = '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>';
+  function isDark() { var t = root.getAttribute("data-theme"); return t ? t === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches; }
+  function syncIcon() { document.getElementById("themeIcon").innerHTML = isDark() ? sun : moon; }
+  document.getElementById("themeBtn").addEventListener("click", function () { root.setAttribute("data-theme", isDark() ? "light" : "dark"); syncIcon(); });
+  syncIcon();
+})();
+</script>
+
+</body>
+</html>

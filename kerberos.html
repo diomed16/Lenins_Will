@@ -1,0 +1,2119 @@
+﻿<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Kerberos — интерактивный курс</title>
+</head>
+<body>
+<style>
+  /* ============ ТОКЕНЫ ============ */
+  :root {
+    --bg:      #eef0f3;
+    --bg-2:    #f8f9fb;
+    --bg-3:    #ffffff;
+    --border:  #d5dae2;
+    --border-2:#c3cad4;
+    --text:    #18202c;
+    --text-dim:#5a6675;
+    --text-faint:#8a94a2;
+    --accent:  #9a6a12;
+    --accent-2:#b98526;
+    --accent-soft: rgba(154,106,18,.10);
+    --danger:  #b3402a;
+    --danger-soft: rgba(179,64,42,.10);
+    --ok:      #2f7d46;
+
+    /* цвета ключей — единая кодировка на всём сайте */
+    --k-client:  #9a6b12;  --k-client-bg:  rgba(154,107,18,.13);
+    --k-sk1:     #157f73;  --k-sk1-bg:     rgba(21,127,115,.13);
+    --k-tgs:     #5f49b8;  --k-tgs-bg:     rgba(95,73,184,.13);
+    --k-sk2:     #3f8c31;  --k-sk2-bg:     rgba(63,140,49,.13);
+    --k-service: #c0522f;  --k-service-bg: rgba(192,82,47,.13);
+
+    --serif: "Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,"Times New Roman",serif;
+    --sans: system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    --mono: "SFMono-Regular",ui-monospace,"Cascadia Code","Cascadia Mono",Consolas,"Liberation Mono",Menlo,monospace;
+
+    --r: 12px;
+    --shadow: 0 1px 2px rgba(20,28,40,.06), 0 8px 24px rgba(20,28,40,.06);
+    --maxw: 1160px;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg:      #0e1520;
+      --bg-2:    #16202e;
+      --bg-3:    #1c2836;
+      --border:  #2a3646;
+      --border-2:#38485c;
+      --text:    #e7ecf3;
+      --text-dim:#9fabbd;
+      --text-faint:#6e7c8f;
+      --accent:  #e0b25a;
+      --accent-2:#d4a24a;
+      --accent-soft: rgba(224,178,90,.12);
+      --danger:  #ec7156;
+      --danger-soft: rgba(236,113,86,.13);
+      --ok:      #6ec27a;
+
+      --k-client:  #e6b957;  --k-client-bg:  rgba(230,185,87,.14);
+      --k-sk1:     #4fc2b4;  --k-sk1-bg:     rgba(79,194,180,.14);
+      --k-tgs:     #a591ec;  --k-tgs-bg:     rgba(165,145,236,.15);
+      --k-sk2:     #79cf68;  --k-sk2-bg:     rgba(121,207,104,.14);
+      --k-service: #ec8a6b;  --k-service-bg: rgba(236,138,107,.15);
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 10px 30px rgba(0,0,0,.35);
+    }
+  }
+  /* явный тумблер темы перекрывает media в обе стороны */
+  :root[data-theme="dark"] {
+    --bg:#0e1520; --bg-2:#16202e; --bg-3:#1c2836; --border:#2a3646; --border-2:#38485c;
+    --text:#e7ecf3; --text-dim:#9fabbd; --text-faint:#6e7c8f;
+    --accent:#e0b25a; --accent-2:#d4a24a; --accent-soft:rgba(224,178,90,.12);
+    --danger:#ec7156; --danger-soft:rgba(236,113,86,.13); --ok:#6ec27a;
+    --k-client:#e6b957; --k-client-bg:rgba(230,185,87,.14);
+    --k-sk1:#4fc2b4; --k-sk1-bg:rgba(79,194,180,.14);
+    --k-tgs:#a591ec; --k-tgs-bg:rgba(165,145,236,.15);
+    --k-sk2:#79cf68; --k-sk2-bg:rgba(121,207,104,.14);
+    --k-service:#ec8a6b; --k-service-bg:rgba(236,138,107,.15);
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+  }
+  :root[data-theme="light"] {
+    --bg:#eef0f3; --bg-2:#f8f9fb; --bg-3:#ffffff; --border:#d5dae2; --border-2:#c3cad4;
+    --text:#18202c; --text-dim:#5a6675; --text-faint:#8a94a2;
+    --accent:#9a6a12; --accent-2:#b98526; --accent-soft:rgba(154,106,18,.10);
+    --danger:#b3402a; --danger-soft:rgba(179,64,42,.10); --ok:#2f7d46;
+    --k-client:#9a6b12; --k-client-bg:rgba(154,107,18,.13);
+    --k-sk1:#157f73; --k-sk1-bg:rgba(21,127,115,.13);
+    --k-tgs:#5f49b8; --k-tgs-bg:rgba(95,73,184,.13);
+    --k-sk2:#3f8c31; --k-sk2-bg:rgba(63,140,49,.13);
+    --k-service:#c0522f; --k-service-bg:rgba(192,82,47,.13);
+    --shadow:0 1px 2px rgba(20,28,40,.06),0 8px 24px rgba(20,28,40,.06);
+  }
+
+  /* ============ БАЗА ============ */
+  * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; scroll-padding-top: 74px; }
+  @media (prefers-reduced-motion: reduce) { html { scroll-behavior: auto; } }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font-family: var(--sans); font-size: 17px; line-height: 1.6;
+    -webkit-font-smoothing: antialiased;
+  }
+  h1,h2,h3 { font-family: var(--serif); font-weight: 600; text-wrap: balance; line-height: 1.15; margin: 0; }
+  p { margin: 0 0 1em; }
+  a { color: var(--accent); }
+  ::selection { background: var(--accent-soft); }
+  .wrap { max-width: var(--maxw); margin: 0 auto; padding: 0 22px; }
+  .prose { max-width: 66ch; }
+
+  /* ============ НАВИГАЦИЯ ============ */
+  header.nav {
+    position: sticky; top: 0; z-index: 50;
+    background: color-mix(in srgb, var(--bg) 84%, transparent);
+    backdrop-filter: blur(12px) saturate(1.2);
+    border-bottom: 1px solid var(--border);
+  }
+  .nav-in { display: flex; align-items: center; gap: 18px; height: 60px; }
+  .brand { display: flex; align-items: center; gap: 10px; font-family: var(--serif); font-weight: 600; font-size: 19px; letter-spacing: .01em; }
+  .brand svg { width: 26px; height: 26px; color: var(--accent); flex: none; }
+  .nav-links { display: flex; gap: 4px; margin-left: auto; overflow-x: auto; scrollbar-width: none; }
+  .nav-links::-webkit-scrollbar { display: none; }
+  .nav-links a {
+    color: var(--text-dim); text-decoration: none; font-size: 14px; font-weight: 500;
+    padding: 7px 11px; border-radius: 8px; white-space: nowrap; transition: color .15s, background .15s;
+  }
+  .nav-links a:hover { color: var(--text); background: var(--bg-3); }
+  .nav-links a.active { color: var(--accent); background: var(--accent-soft); }
+  .theme-btn {
+    flex: none; width: 38px; height: 38px; border-radius: 9px; border: 1px solid var(--border);
+    background: var(--bg-3); color: var(--text-dim); cursor: pointer; display: grid; place-items: center;
+    transition: color .15s, border-color .15s;
+  }
+  .theme-btn:hover { color: var(--accent); border-color: var(--border-2); }
+  .theme-btn svg { width: 18px; height: 18px; }
+  #progress { position: absolute; left: 0; bottom: -1px; height: 2px; background: var(--accent); width: 0; transition: width .1s linear; }
+
+  /* ============ HERO ============ */
+  .hero { position: relative; padding: 88px 0 64px; overflow: hidden; }
+  .hero::before {
+    content: ""; position: absolute; inset: 0; z-index: -1;
+    background:
+      radial-gradient(700px 380px at 78% 8%, var(--accent-soft), transparent 70%),
+      radial-gradient(560px 320px at 8% 90%, color-mix(in srgb, var(--k-tgs) 12%, transparent), transparent 72%);
+  }
+  .eyebrow { font-family: var(--mono); font-size: 12.5px; letter-spacing: .22em; text-transform: uppercase; color: var(--accent); margin-bottom: 20px; }
+  .hero h1 { font-size: clamp(2.7rem, 7vw, 5.2rem); letter-spacing: -.02em; }
+  .hero h1 .sub { display: block; font-size: clamp(1.05rem, 2.6vw, 1.6rem); font-family: var(--sans); font-weight: 400; color: var(--text-dim); margin-top: 18px; max-width: 34ch; line-height: 1.45; }
+  .hero-cta { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 34px; }
+  .btn {
+    display: inline-flex; align-items: center; gap: 8px; font: inherit; font-weight: 600; font-size: 15px;
+    padding: 12px 20px; border-radius: 10px; border: 1px solid transparent; cursor: pointer; text-decoration: none;
+    transition: transform .12s, background .15s, border-color .15s;
+  }
+  .btn:active { transform: translateY(1px); }
+  .btn.primary { background: var(--accent); color: #14100a; }
+  .btn.primary:hover { background: var(--accent-2); }
+  .btn.ghost { background: var(--bg-3); color: var(--text); border-color: var(--border); }
+  .btn.ghost:hover { border-color: var(--border-2); }
+
+  .hero-cast { display: flex; gap: 14px; margin-top: 52px; flex-wrap: wrap; }
+  .hero-head {
+    flex: 1 1 200px; background: var(--bg-3); border: 1px solid var(--border); border-radius: var(--r);
+    padding: 18px 18px 16px; box-shadow: var(--shadow); position: relative; overflow: hidden;
+  }
+  .hero-head .tag { font-family: var(--mono); font-size: 11px; letter-spacing: .12em; text-transform: uppercase; color: var(--text-faint); }
+  .hero-head h3 { font-size: 1.15rem; margin: 6px 0 4px; }
+  .hero-head p { font-size: 13.5px; color: var(--text-dim); margin: 0; line-height: 1.45; }
+  .hero-head .num { position: absolute; top: 10px; right: 14px; font-family: var(--serif); font-size: 2.4rem; color: var(--border-2); line-height: 1; }
+
+  /* ============ СЕКЦИИ ============ */
+  section { padding: 68px 0; border-top: 1px solid var(--border); }
+  .sec-label { font-family: var(--mono); font-size: 12px; letter-spacing: .2em; text-transform: uppercase; color: var(--accent); margin-bottom: 14px; }
+  section h2 { font-size: clamp(1.7rem, 3.6vw, 2.5rem); letter-spacing: -.01em; margin-bottom: 8px; }
+  .sec-intro { color: var(--text-dim); font-size: 1.06rem; max-width: 62ch; margin-bottom: 34px; }
+
+  /* карточки-сетки */
+  .grid { display: grid; gap: 16px; }
+  .g-3 { grid-template-columns: repeat(3, 1fr); }
+  .g-2 { grid-template-columns: repeat(2, 1fr); }
+  @media (max-width: 820px) { .g-3, .g-2 { grid-template-columns: 1fr; } }
+
+  .card {
+    background: var(--bg-3); border: 1px solid var(--border); border-radius: var(--r);
+    padding: 22px; box-shadow: var(--shadow);
+  }
+  .card h3 { font-size: 1.2rem; margin-bottom: 8px; }
+  .card p { font-size: 14.5px; color: var(--text-dim); margin: 0; }
+  .card .ic { width: 34px; height: 34px; border-radius: 9px; display: grid; place-items: center; margin-bottom: 14px; background: var(--accent-soft); color: var(--accent); }
+  .card .ic svg { width: 19px; height: 19px; }
+
+  /* «проблема» — до/после */
+  .compare { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 720px) { .compare { grid-template-columns: 1fr; } }
+  .compare .col { border-radius: var(--r); padding: 22px; border: 1px solid var(--border); background: var(--bg-3); }
+  .compare .bad { border-color: color-mix(in srgb, var(--danger) 34%, var(--border)); }
+  .compare .good { border-color: color-mix(in srgb, var(--ok) 34%, var(--border)); }
+  .compare h4 { margin: 0 0 12px; font-family: var(--sans); font-size: 13px; letter-spacing: .04em; text-transform: uppercase; }
+  .compare .bad h4 { color: var(--danger); }
+  .compare .good h4 { color: var(--ok); }
+  .compare ul { margin: 0; padding-left: 18px; }
+  .compare li { font-size: 14.5px; color: var(--text-dim); margin-bottom: 9px; }
+  .compare li::marker { color: var(--text-faint); }
+
+  /* ============ КЛЮЧИ — легенда ============ */
+  .keychip {
+    display: inline-flex; align-items: center; gap: 6px; font-family: var(--mono); font-size: 12.5px;
+    font-weight: 600; padding: 3px 9px 3px 7px; border-radius: 999px; white-space: nowrap;
+    border: 1px solid; line-height: 1.4;
+  }
+  .keychip svg { width: 12px; height: 12px; flex: none; }
+  .k-client  { color: var(--k-client);  background: var(--k-client-bg);  border-color: color-mix(in srgb, var(--k-client) 40%, transparent); }
+  .k-sk1     { color: var(--k-sk1);     background: var(--k-sk1-bg);     border-color: color-mix(in srgb, var(--k-sk1) 40%, transparent); }
+  .k-tgs     { color: var(--k-tgs);     background: var(--k-tgs-bg);     border-color: color-mix(in srgb, var(--k-tgs) 40%, transparent); }
+  .k-sk2     { color: var(--k-sk2);     background: var(--k-sk2-bg);     border-color: color-mix(in srgb, var(--k-sk2) 40%, transparent); }
+  .k-service { color: var(--k-service); background: var(--k-service-bg); border-color: color-mix(in srgb, var(--k-service) 40%, transparent); }
+
+  .keylegend { display: flex; flex-wrap: wrap; gap: 10px; }
+  .keylegend .item { display: flex; align-items: flex-start; gap: 10px; flex: 1 1 300px; background: var(--bg-3); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
+  .keylegend .item .kdesc { font-size: 13px; color: var(--text-dim); margin-top: 5px; }
+
+  /* пояснительный блок */
+  .callout { background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border)); border-radius: var(--r); padding: 22px 24px; margin-top: 26px; }
+  .callout h3 { font-size: 1.25rem; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
+  .callout h3 svg { width: 22px; height: 22px; color: var(--accent); flex: none; }
+  .callout p { font-size: 15px; color: var(--text); margin: 0 0 12px; }
+  .callout ul { margin: 0 0 12px; padding-left: 20px; }
+  .callout li { font-size: 14.5px; margin-bottom: 10px; color: var(--text-dim); }
+  .callout li b { color: var(--text); }
+  .callout .analogy { font-size: 14.5px; font-style: italic; color: var(--text-dim); border-left: 3px solid var(--accent); padding-left: 14px; margin: 4px 0 0; }
+  .callout .caveat { font-size: 13.5px; color: var(--text-faint); margin: 14px 0 0; }
+
+  /* ============ СИМУЛЯТОР ============ */
+  .sim { background: var(--bg-2); border: 1px solid var(--border); border-radius: 16px; padding: 20px; box-shadow: var(--shadow); }
+  .actors { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; margin-bottom: 18px; }
+  @media (max-width: 760px) { .actors { grid-template-columns: 1fr; } }
+  .actor {
+    background: var(--bg-3); border: 1px solid var(--border); border-radius: 12px; padding: 14px;
+    transition: border-color .25s, box-shadow .25s, transform .25s;
+  }
+  .actor.hot { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .actor .ahead { display: flex; align-items: center; gap: 9px; }
+  .actor .adot { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; flex: none; background: var(--accent-soft); color: var(--accent); }
+  .actor .adot svg { width: 17px; height: 17px; }
+  .actor .aname { font-family: var(--serif); font-size: 1.12rem; font-weight: 600; }
+  .actor .arole { font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint); }
+  .actor .aholds { margin-top: 11px; display: flex; flex-wrap: wrap; gap: 6px; }
+  .actor .aholds .keychip { opacity: .42; filter: grayscale(.4); transition: opacity .25s, filter .25s; }
+  .actor .aholds .keychip.lit { opacity: 1; filter: none; }
+  .actor .kh-label { font-size: 11px; color: var(--text-faint); width: 100%; margin-bottom: 1px; }
+
+  /* карта потока */
+  .flowmap { position: relative; height: 68px; margin: 4px 0 16px; }
+  .flowmap svg { width: 100%; height: 100%; overflow: visible; }
+  .flowmap .lane { stroke: var(--border-2); stroke-width: 2; }
+  .flowmap .msgline { stroke: var(--accent); stroke-width: 2.5; stroke-linecap: round; }
+  .flowmap .node { fill: var(--bg-3); stroke: var(--border-2); stroke-width: 2; }
+  .flowmap .node.hot { stroke: var(--accent); }
+  .flowmap .nlabel { fill: var(--text-dim); font-family: var(--mono); font-size: 11px; font-weight: 600; }
+  .flowmap .dot { fill: var(--accent); filter: drop-shadow(0 0 5px var(--accent)); }
+  .flowmap .arrow { fill: var(--accent); }
+
+  /* контролы шагов */
+  .stepbar { display: flex; align-items: center; gap: 10px; margin-bottom: 16px; flex-wrap: wrap; }
+  .steps-dots { display: flex; gap: 6px; margin: 0 auto; flex-wrap: wrap; }
+  .sdot { width: 30px; height: 30px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-3); color: var(--text-dim); font-family: var(--mono); font-size: 13px; font-weight: 600; cursor: pointer; transition: all .15s; }
+  .sdot:hover { border-color: var(--border-2); color: var(--text); }
+  .sdot.active { background: var(--accent); border-color: var(--accent); color: #14100a; }
+  .sdot.done { color: var(--accent); border-color: color-mix(in srgb, var(--accent) 45%, var(--border)); }
+  .navbtn { width: 40px; height: 40px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-3); color: var(--text); cursor: pointer; display: grid; place-items: center; transition: all .15s; }
+  .navbtn:hover:not(:disabled) { border-color: var(--accent); color: var(--accent); }
+  .navbtn:disabled { opacity: .35; cursor: default; }
+  .navbtn svg { width: 18px; height: 18px; }
+
+  /* детальная панель */
+  .detail { display: grid; grid-template-columns: 1.25fr 1fr; gap: 16px; }
+  @media (max-width: 760px) { .detail { grid-template-columns: 1fr; } }
+  .dpanel { background: var(--bg-3); border: 1px solid var(--border); border-radius: 12px; padding: 18px; }
+  .dhead { display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; margin-bottom: 4px; }
+  .dhead .msgname { font-family: var(--mono); font-weight: 700; font-size: 15px; color: var(--accent); letter-spacing: .02em; }
+  .dhead .dir { font-size: 13px; color: var(--text-dim); font-weight: 600; }
+  .dpanel h3 { font-size: 1.3rem; margin: 6px 0 10px; }
+  .dpanel .what { font-size: 15px; color: var(--text-dim); }
+  .dpanel .result { margin-top: 14px; padding: 12px 14px; border-radius: 10px; background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 26%, transparent); font-size: 14px; }
+  .dpanel .result b { color: var(--accent); }
+
+  /* содержимое сообщения */
+  .envelope { background: var(--bg-2); border: 1px solid var(--border); border-radius: 12px; padding: 16px; }
+  .envelope .etitle { font-family: var(--mono); font-size: 11px; letter-spacing: .14em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 12px; }
+  .field { border: 1px dashed var(--border-2); border-radius: 9px; padding: 10px 12px; margin-bottom: 9px; }
+  .field:last-child { margin-bottom: 0; }
+  .field.enc { border-style: solid; }
+  .field .frow { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+  .field .flabel { font-family: var(--mono); font-size: 13px; font-weight: 600; }
+  .field .fbody { font-size: 12.5px; color: var(--text-dim); margin-top: 6px; line-height: 1.45; }
+  .field .plain { font-family: var(--mono); font-size: 10.5px; letter-spacing: .1em; text-transform: uppercase; color: var(--text-faint); }
+  .field.enc.by-client  { background: var(--k-client-bg);  border-color: color-mix(in srgb, var(--k-client) 45%, transparent); }
+  .field.enc.by-sk1     { background: var(--k-sk1-bg);     border-color: color-mix(in srgb, var(--k-sk1) 45%, transparent); }
+  .field.enc.by-tgs     { background: var(--k-tgs-bg);     border-color: color-mix(in srgb, var(--k-tgs) 45%, transparent); }
+  .field.enc.by-sk2     { background: var(--k-sk2-bg);     border-color: color-mix(in srgb, var(--k-sk2) 45%, transparent); }
+  .field.enc.by-service { background: var(--k-service-bg); border-color: color-mix(in srgb, var(--k-service) 45%, transparent); }
+
+  /* ============ КЛЮЧИ таблица ============ */
+  .tablewrap { overflow-x: auto; border: 1px solid var(--border); border-radius: 12px; }
+  table { border-collapse: collapse; width: 100%; min-width: 640px; font-size: 14px; }
+  th, td { text-align: left; padding: 13px 16px; border-bottom: 1px solid var(--border); vertical-align: top; }
+  thead th { background: var(--bg-2); font-size: 12px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-dim); font-weight: 600; }
+  tbody tr:last-child td { border-bottom: none; }
+  td .note { color: var(--text-dim); font-size: 13px; }
+  .yes { color: var(--ok); font-weight: 600; } .no { color: var(--danger); font-weight: 600; }
+
+  /* ============ ЛАБА / ТЕРМИНАЛ ============ */
+  code { font-family: var(--mono); font-size: .92em; }
+  .lab { display: grid; grid-template-columns: 1.7fr 1fr; gap: 16px; }
+  @media (max-width: 860px) { .lab { grid-template-columns: 1fr; } }
+  .term { background: #0c1119; border: 1px solid #223047; border-radius: 14px; overflow: hidden; display: flex; flex-direction: column; box-shadow: var(--shadow); min-height: 430px; }
+  .term-bar { display: flex; align-items: center; gap: 10px; padding: 10px 14px; background: #121b28; border-bottom: 1px solid #223047; }
+  .term-bar .dots { display: flex; gap: 6px; }
+  .term-bar .dots i { width: 11px; height: 11px; border-radius: 50%; display: block; background: #39485c; }
+  .term-bar .dots i:nth-child(1) { background: #e0644c; }
+  .term-bar .dots i:nth-child(2) { background: #d8ad5a; }
+  .term-bar .dots i:nth-child(3) { background: #6bbf7a; }
+  .term-title { font-family: var(--mono); font-size: 12px; color: #6b7a8d; }
+  .term-reset { margin-left: auto; font: inherit; font-family: var(--mono); font-size: 11px; color: #6b7a8d; background: transparent; border: 1px solid #223047; border-radius: 6px; padding: 3px 10px; cursor: pointer; }
+  .term-reset:hover { color: #d7e0ea; border-color: #39485c; }
+  .term-body { flex: 1; overflow-y: auto; padding: 14px 16px; font-family: var(--mono); font-size: 13px; line-height: 1.55; color: #d7e0ea; white-space: pre-wrap; word-break: break-word; max-height: 360px; }
+  .term-body > div { margin: 1px 0; }
+  .term-body .cmd-echo .ps { color: #6bbf7a; }
+  .term-body .out { color: #aeb9c7; }
+  .term-body .err { color: #ec8a6b; }
+  .term-body .note { color: #dcb15e; border-left: 2px solid #5a4a1e; padding-left: 9px; font-style: italic; }
+  .term-body .muted { color: #6b7a8d; }
+  .term-input { display: flex; align-items: center; gap: 8px; padding: 11px 16px; border-top: 1px solid #223047; background: #0c1119; }
+  .term-input .ps1 { color: #6bbf7a; font-family: var(--mono); font-size: 13px; white-space: nowrap; }
+  .term-input input { flex: 1; background: transparent; border: none; outline: none; color: #d7e0ea; font-family: var(--mono); font-size: 13px; caret-color: #6bbf7a; min-width: 40px; }
+
+  .missions { background: var(--bg-3); border: 1px solid var(--border); border-radius: 14px; padding: 18px 20px; box-shadow: var(--shadow); align-self: start; }
+  .missions h3 { font-size: 1.05rem; margin-bottom: 12px; }
+  .missions ul { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  .missions li { display: flex; gap: 10px; align-items: flex-start; font-size: 13.5px; color: var(--text-dim); }
+  .missions li .box { width: 20px; height: 20px; border-radius: 6px; border: 1.6px solid var(--border-2); flex: none; display: grid; place-items: center; font-size: 12px; color: #fff; transition: background .2s, border-color .2s; }
+  .missions li.done { color: var(--text); }
+  .missions li.done .box { background: var(--ok); border-color: var(--ok); }
+  .missions li code, .mission-hint code { font-family: var(--mono); font-size: 12px; background: var(--bg-2); padding: 1px 5px; border-radius: 5px; color: var(--accent); }
+  .mission-hint { margin-top: 14px; font-size: 12.5px; color: var(--text-faint); }
+  .mission-done { margin-top: 14px; padding: 11px 13px; border-radius: 9px; background: color-mix(in srgb, var(--ok) 12%, var(--bg-2)); border: 1px solid color-mix(in srgb, var(--ok) 30%, transparent); font-size: 13px; display: none; }
+  .mission-done.show { display: block; }
+
+  .quickcmds { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 14px; }
+  .quickcmds .qc { font-family: var(--mono); font-size: 12.5px; padding: 6px 11px; border-radius: 8px; border: 1px solid var(--border); background: var(--bg-3); color: var(--text); cursor: pointer; transition: color .15s, border-color .15s; }
+  .quickcmds .qc:hover { border-color: var(--accent); color: var(--accent); }
+
+  .reference { margin-top: 24px; }
+  .refgrid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+  @media (max-width: 860px) { .refgrid { grid-template-columns: 1fr; } }
+  .refcard { background: var(--bg-3); border: 1px solid var(--border); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); }
+  .refcard h3 { font-size: 1.1rem; margin-bottom: 3px; }
+  .refcard .sub { font-size: 12px; color: var(--text-faint); margin-bottom: 14px; }
+  .refcard dl { margin: 0; }
+  .refcard dt { font-family: var(--mono); font-size: 12.5px; color: var(--accent); font-weight: 700; margin-top: 13px; }
+  .refcard dt:first-of-type { margin-top: 0; }
+  .refcard dd { margin: 3px 0 0; font-size: 13px; color: var(--text-dim); }
+
+  /* ============ АККОРДЕОН «ПОЧЕМУ» ============ */
+  .accordion { display: flex; flex-direction: column; gap: 10px; }
+  .accordion details { background: var(--bg-3); border: 1px solid var(--border); border-radius: 12px; box-shadow: var(--shadow); overflow: hidden; }
+  .accordion summary { cursor: pointer; padding: 16px 20px; font-family: var(--serif); font-size: 1.1rem; font-weight: 600; list-style: none; display: flex; align-items: center; gap: 12px; }
+  .accordion summary::-webkit-details-marker { display: none; }
+  .accordion summary .qn { font-family: var(--mono); font-size: 13px; color: var(--accent); flex: none; }
+  .accordion summary .chev { margin-left: auto; transition: transform .2s; color: var(--accent); flex: none; width: 18px; height: 18px; }
+  .accordion details[open] summary .chev { transform: rotate(90deg); }
+  .accordion .abody { padding: 0 20px 18px; font-size: 15px; color: var(--text-dim); line-height: 1.6; }
+  .accordion .abody b { color: var(--text); }
+  .accordion .abody .tradeoff { margin-top: 10px; font-size: 13.5px; padding: 10px 12px; border-radius: 9px; background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent); }
+  .accordion .abody .tradeoff b { color: var(--accent); }
+
+  /* ============ CROSS-REALM ============ */
+  .xflow { display: flex; align-items: flex-start; gap: 4px; flex-wrap: wrap; justify-content: center; background: var(--bg-2); border: 1px solid var(--border); border-radius: 12px; padding: 20px 16px; margin-bottom: 20px; }
+  .xnode { text-align: center; width: 92px; }
+  .xnode .b { display: grid; place-items: center; width: 58px; height: 58px; border-radius: 14px; background: var(--bg-3); border: 1px solid var(--border-2); margin: 0 auto 8px; color: var(--accent); }
+  .xnode .b svg { width: 26px; height: 26px; }
+  .xnode .l { font-size: 12.5px; color: var(--text); font-weight: 600; }
+  .xnode .s { font-family: var(--mono); font-size: 10.5px; color: var(--text-faint); }
+  .xarrow { display: flex; flex-direction: column; align-items: center; padding-top: 16px; color: var(--text-faint); }
+  .xarrow svg { width: 26px; height: 26px; }
+  .xarrow .an { font-family: var(--mono); font-size: 10px; color: var(--accent); margin-top: 2px; }
+  .xsteps { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 10px; }
+  .xsteps li { display: flex; gap: 12px; font-size: 14.5px; color: var(--text-dim); }
+  .xsteps li .n { font-family: var(--mono); font-weight: 700; color: var(--accent); flex: none; width: 20px; }
+  .xsteps li b { color: var(--text); }
+
+  .pill { display: inline-block; font-family: var(--mono); font-size: 11px; padding: 2px 9px; border-radius: 999px; font-weight: 600; letter-spacing: .02em; }
+  .pill.danger { background: var(--danger-soft); color: var(--danger); border: 1px solid color-mix(in srgb, var(--danger) 35%, transparent); }
+  .pill.ok { background: color-mix(in srgb, var(--ok) 12%, transparent); color: var(--ok); border: 1px solid color-mix(in srgb, var(--ok) 32%, transparent); }
+  .pill.warn { background: var(--accent-soft); color: var(--accent); border: 1px solid color-mix(in srgb, var(--accent) 32%, transparent); }
+  .card .pill { margin-bottom: 8px; }
+
+  /* ============ ФЛЕШ-КАРТОЧКИ ============ */
+  .deck { max-width: 640px; margin: 0 auto; }
+  .deck-meta { text-align: center; font-family: var(--mono); font-size: 13px; color: var(--text-dim); margin-bottom: 14px; }
+  .deck-meta b { color: var(--accent); }
+  .fcard { perspective: 1400px; height: 250px; margin-bottom: 18px; cursor: pointer; }
+  .fcard-inner { position: relative; width: 100%; height: 100%; transition: transform .5s cubic-bezier(.4,.1,.2,1); transform-style: preserve-3d; }
+  .fcard.flipped .fcard-inner { transform: rotateY(180deg); }
+  .fcard-face { position: absolute; inset: 0; -webkit-backface-visibility: hidden; backface-visibility: hidden; border-radius: 16px; border: 1px solid var(--border); box-shadow: var(--shadow); display: flex; flex-direction: column; align-items: center; justify-content: center; padding: 30px; text-align: center; }
+  .fcard-front { background: var(--bg-3); }
+  .fcard-back { background: var(--bg-2); transform: rotateY(180deg); }
+  .fcard .ftag { position: absolute; top: 16px; font-family: var(--mono); font-size: 11px; letter-spacing: .16em; text-transform: uppercase; color: var(--text-faint); }
+  .fcard .fq { font-family: var(--serif); font-size: 1.4rem; text-wrap: balance; }
+  .fcard .fa { font-size: 15px; color: var(--text-dim); line-height: 1.55; }
+  .fcard .hint { position: absolute; bottom: 14px; font-size: 11.5px; color: var(--text-faint); font-family: var(--mono); }
+  .deck-controls { display: flex; gap: 10px; justify-content: center; }
+  .deck-done { text-align: center; padding: 24px; border-radius: 14px; border: 1px solid var(--border); background: var(--bg-3); box-shadow: var(--shadow); display: none; }
+  .deck-done.show { display: block; }
+  .deck-done .big { font-family: var(--serif); font-size: 1.5rem; margin-bottom: 8px; }
+  @media (prefers-reduced-motion: reduce) { .fcard-inner { transition: none; } }
+
+  /* ============ ЭКЗАМЕН ============ */
+  .exam-bar { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 18px; flex-wrap: wrap; position: sticky; top: 62px; background: color-mix(in srgb, var(--bg) 90%, transparent); backdrop-filter: blur(8px); padding: 10px 0; z-index: 5; border-bottom: 1px solid var(--border); }
+  .exam-timer { font-family: var(--mono); font-size: 15px; color: var(--text); font-variant-numeric: tabular-nums; }
+  .exam-timer b { color: var(--accent); }
+  .exam-prog { font-family: var(--mono); font-size: 13px; color: var(--text-dim); }
+  .exq { background: var(--bg-3); border: 1px solid var(--border); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); }
+  .exq .qq { font-weight: 600; font-size: 1.02rem; margin-bottom: 6px; }
+  .exq .exn { font-family: var(--mono); font-size: 12px; color: var(--accent); letter-spacing: .08em; }
+  .exopts { display: grid; gap: 8px; margin-top: 12px; }
+  .exopt { text-align: left; font: inherit; font-size: 14.5px; padding: 11px 14px; border-radius: 10px; border: 1px solid var(--border); background: var(--bg-2); color: var(--text); cursor: pointer; display: flex; gap: 11px; align-items: center; transition: border-color .12s, background .12s; }
+  .exopt:hover:not(:disabled) { border-color: var(--border-2); }
+  .exopt .mk { width: 20px; height: 20px; border-radius: 50%; border: 1.5px solid var(--border-2); flex: none; display: grid; place-items: center; font-size: 12px; color: #fff; }
+  .exopt.sel { border-color: var(--accent); background: var(--accent-soft); }
+  .exopt.sel .mk { border-color: var(--accent); background: var(--accent); }
+  .exopt.correct { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, var(--bg-2)); }
+  .exopt.correct .mk { background: var(--ok); border-color: var(--ok); }
+  .exopt.wrongpick { border-color: var(--danger); background: color-mix(in srgb, var(--danger) 12%, var(--bg-2)); }
+  .exopt.wrongpick .mk { background: var(--danger); border-color: var(--danger); }
+  .exopt:disabled { cursor: default; }
+  .exex { margin-top: 10px; font-size: 13.5px; color: var(--text-dim); padding: 10px 12px; border-radius: 9px; background: var(--bg-2); border-left: 3px solid var(--accent); display: none; }
+  .exex.show { display: block; }
+  .exam-result { text-align: center; padding: 26px; border-radius: 14px; border: 1px solid var(--border); background: var(--bg-3); box-shadow: var(--shadow); margin-bottom: 22px; }
+  .exam-result .big { font-family: var(--serif); font-size: 3rem; line-height: 1; }
+  .exam-result .badge { display: inline-block; margin-top: 12px; padding: 5px 16px; border-radius: 999px; font-weight: 600; font-size: 14px; }
+  .exam-result.pass { border-color: color-mix(in srgb, var(--ok) 40%, var(--border)); }
+  .exam-result.pass .badge { background: color-mix(in srgb, var(--ok) 14%, transparent); color: var(--ok); }
+  .exam-result.fail .badge { background: var(--danger-soft); color: var(--danger); }
+  .exam-result .sub { color: var(--text-dim); font-size: 14px; margin-top: 10px; }
+
+  /* ============ ОГЛАВЛЕНИЕ-ПУТЬ ============ */
+  .path { border-top: 1px solid var(--border); padding: 26px 0 4px; }
+  .path .plead { font-family: var(--mono); font-size: 12px; letter-spacing: .18em; text-transform: uppercase; color: var(--text-faint); margin-bottom: 14px; }
+  .path-grid { display: grid; grid-template-columns: repeat(6, 1fr); gap: 10px; }
+  @media (max-width: 900px) { .path-grid { grid-template-columns: repeat(2, 1fr); } }
+  .path-card { text-align: left; background: var(--bg-3); border: 1px solid var(--border); border-radius: 10px; padding: 13px 14px; cursor: pointer; text-decoration: none; color: inherit; display: flex; flex-direction: column; gap: 7px; box-shadow: var(--shadow); transition: border-color .15s, transform .12s; }
+  .path-card:hover { border-color: var(--accent); transform: translateY(-2px); }
+  .path-card .pnum { font-family: var(--mono); font-size: 11px; color: var(--accent); letter-spacing: .1em; }
+  .path-card .pt { font-family: var(--serif); font-weight: 600; font-size: 1.02rem; line-height: 1.2; }
+  .path-card .pd { font-size: 11.5px; color: var(--text-faint); line-height: 1.4; }
+  .pdots, .level-dots { display: inline-flex; gap: 4px; }
+  .pdots i { width: 6px; height: 6px; border-radius: 50%; background: var(--border-2); display: block; }
+  .pdots i.on { background: var(--accent); }
+
+  /* ============ РАЗДЕЛИТЕЛИ УРОВНЕЙ ============ */
+  .level { border-top: 1px solid var(--border); background: var(--bg-2); padding: 42px 0 8px; }
+  .level + section { border-top: none; padding-top: 30px; }
+  .level-meta { display: flex; align-items: center; gap: 12px; margin-bottom: 10px; flex-wrap: wrap; }
+  .level-tag { font-family: var(--mono); font-size: 12px; letter-spacing: .16em; text-transform: uppercase; color: var(--accent); font-weight: 600; }
+  .level-dots i { width: 9px; height: 9px; border-radius: 50%; background: var(--border-2); display: block; }
+  .level-dots i.on { background: var(--accent); }
+  .level-diff { font-size: 12px; color: var(--text-faint); font-family: var(--mono); }
+  .level-title { font-family: var(--serif); font-size: clamp(1.5rem, 3vw, 2.05rem); margin-bottom: 6px; letter-spacing: -.01em; }
+  .level-desc { color: var(--text-dim); font-size: 1.02rem; max-width: 62ch; margin: 0; }
+
+  /* ============ ГЛУБИНЫ / ADVANCED ============ */
+  .adv-h { font-family: var(--serif); font-size: 1.35rem; margin: 40px 0 10px; padding-top: 22px; border-top: 1px solid var(--border); display: flex; align-items: center; gap: 10px; }
+  .adv-h:first-of-type { border-top: none; padding-top: 0; margin-top: 8px; }
+  .adv-h .hn { font-family: var(--mono); font-size: 13px; color: var(--accent); }
+  .adv-p { color: var(--text-dim); font-size: 15px; max-width: 66ch; margin: 0 0 16px; }
+  .adv-p b { color: var(--text); }
+  .kd { font-family: var(--mono); font-size: 12.5px; background: #0c1119; border: 1px solid #223047; border-radius: 10px; padding: 15px 17px; overflow-x: auto; color: #aeb9c7; line-height: 1.75; white-space: pre; margin: 0 0 16px; }
+  .kd .k { color: #e0b25a; } .kd .c { color: #6b7a8d; } .kd .s { color: #6bbf7a; }
+  td .pill { font-size: 10px; }
+  .adv-note { font-size: 13.5px; color: var(--text-dim); padding: 12px 14px; border-radius: 9px; background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 25%, transparent); margin-top: 4px; }
+  .adv-note b { color: var(--accent); }
+
+  /* ============ ТАЙМЛАЙН ЖИЗНИ БИЛЕТА ============ */
+  .tl-wrap { background: var(--bg-2); border: 1px solid var(--border); border-radius: 12px; padding: 22px; margin: 4px 0 16px; }
+  .tl-track { position: relative; height: 46px; border-radius: 8px; background: var(--bg-3); border: 1px solid var(--border); }
+  .tl-seg { position: absolute; top: 0; bottom: 0; }
+  .tl-valid { background: color-mix(in srgb, var(--ok) 30%, transparent); border-right: 2px solid var(--ok); border-radius: 7px 0 0 7px; }
+  .tl-renew { background: repeating-linear-gradient(45deg, var(--accent-soft), var(--accent-soft) 6px, transparent 6px, transparent 12px); }
+  .tl-invalid { background: repeating-linear-gradient(45deg, var(--danger-soft), var(--danger-soft) 6px, transparent 6px, transparent 12px); border-right: 2px dashed var(--danger); border-radius: 7px 0 0 7px; }
+  .tl-now { position: absolute; top: -6px; bottom: -6px; width: 2px; background: var(--text); z-index: 3; }
+  .tl-now::before { content: ""; position: absolute; top: -6px; left: -5px; width: 12px; height: 12px; border-radius: 50%; background: var(--text); }
+  .tl-ticks { position: relative; height: 18px; margin-top: 8px; }
+  .tl-tick { position: absolute; transform: translateX(-50%); white-space: nowrap; font-family: var(--mono); font-size: 10.5px; color: var(--text-faint); }
+  .tl-slider { width: 100%; margin: 18px 0 2px; accent-color: var(--accent); cursor: pointer; }
+  .tl-controls { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; margin-top: 10px; }
+  .tl-controls .btn { padding: 9px 16px; font-size: 14px; }
+  .tl-toggle { display: inline-flex; align-items: center; gap: 8px; font-size: 13.5px; color: var(--text-dim); cursor: pointer; margin-left: auto; }
+  .tl-toggle input { accent-color: var(--accent); width: 16px; height: 16px; }
+  .tl-status { margin-top: 14px; padding: 13px 15px; border-radius: 10px; font-size: 14.5px; border: 1px solid var(--border); background: var(--bg-3); color: var(--text-dim); }
+  .tl-status.ok { border-color: color-mix(in srgb, var(--ok) 40%, var(--border)); background: color-mix(in srgb, var(--ok) 8%, var(--bg-3)); }
+  .tl-status.warn { border-color: color-mix(in srgb, var(--accent) 40%, var(--border)); background: var(--accent-soft); }
+  .tl-status.bad { border-color: color-mix(in srgb, var(--danger) 40%, var(--border)); background: var(--danger-soft); }
+  .tl-status b { color: var(--text); }
+  .tl-meta { display: flex; gap: 16px; flex-wrap: wrap; font-family: var(--mono); font-size: 12.5px; color: var(--text-dim); margin-top: 12px; }
+  .tl-meta b { color: var(--accent); }
+  .tl-legend { display: flex; flex-wrap: wrap; gap: 14px; margin-top: 14px; font-size: 12.5px; color: var(--text-dim); }
+  .tl-legend span { display: inline-flex; align-items: center; gap: 6px; }
+  .tl-legend i { width: 15px; height: 12px; border-radius: 3px; display: inline-block; flex: none; }
+
+  /* ============ КВИЗ ============ */
+  .quiz { display: grid; gap: 16px; }
+  .q { background: var(--bg-3); border: 1px solid var(--border); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); }
+  .q .qq { font-weight: 600; font-size: 1.05rem; margin-bottom: 4px; }
+  .q .qn { font-family: var(--mono); font-size: 12px; color: var(--accent); letter-spacing: .1em; }
+  .opts { display: grid; gap: 8px; margin-top: 14px; }
+  .opt {
+    text-align: left; font: inherit; font-size: 14.5px; padding: 12px 14px; border-radius: 10px;
+    border: 1px solid var(--border); background: var(--bg-2); color: var(--text); cursor: pointer;
+    display: flex; align-items: center; gap: 11px; transition: border-color .15s, background .15s;
+  }
+  .opt:hover:not(:disabled) { border-color: var(--border-2); }
+  .opt .mark { width: 22px; height: 22px; border-radius: 50%; border: 1.5px solid var(--border-2); flex: none; display: grid; place-items: center; font-size: 13px; }
+  .opt.correct { border-color: var(--ok); background: color-mix(in srgb, var(--ok) 12%, var(--bg-2)); }
+  .opt.correct .mark { border-color: var(--ok); background: var(--ok); color: #fff; }
+  .opt.wrong { border-color: var(--danger); background: color-mix(in srgb, var(--danger) 12%, var(--bg-2)); }
+  .opt.wrong .mark { border-color: var(--danger); background: var(--danger); color: #fff; }
+  .opt:disabled { cursor: default; }
+  .explain { margin-top: 12px; font-size: 14px; color: var(--text-dim); padding: 12px 14px; border-radius: 10px; background: var(--bg-2); border-left: 3px solid var(--accent); display: none; }
+  .explain.show { display: block; }
+  .quizscore { text-align: center; font-family: var(--mono); color: var(--text-dim); margin-top: 20px; font-size: 14px; }
+  .quizscore b { color: var(--accent); }
+
+  /* ============ АТАКИ ============ */
+  .attack { background: var(--bg-3); border: 1px solid var(--border); border-radius: 12px; padding: 20px; box-shadow: var(--shadow); position: relative; overflow: hidden; }
+  .attack::before { content: ""; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; background: var(--danger); }
+  .attack h3 { font-size: 1.18rem; margin-bottom: 4px; display: flex; align-items: center; gap: 9px; }
+  .attack .weak { font-family: var(--mono); font-size: 11.5px; color: var(--text-faint); margin: 8px 0 10px; }
+  .attack p { font-size: 14px; color: var(--text-dim); margin: 0 0 10px; }
+  .attack .fix { font-size: 13.5px; padding: 10px 12px; border-radius: 9px; background: color-mix(in srgb, var(--ok) 10%, var(--bg-2)); border: 1px solid color-mix(in srgb, var(--ok) 26%, transparent); }
+  .attack .fix b { color: var(--ok); }
+
+  /* ============ ГЛОССАРИЙ ============ */
+  .glossary dl { display: grid; grid-template-columns: repeat(2,1fr); gap: 0 30px; margin: 0; }
+  @media (max-width: 720px) { .glossary dl { grid-template-columns: 1fr; } }
+  .glossary dt { font-family: var(--mono); font-weight: 700; color: var(--accent); font-size: 14px; margin-top: 16px; }
+  .glossary dd { margin: 4px 0 0; font-size: 14px; color: var(--text-dim); }
+  .glossary .g-inner { border-top: 1px solid var(--border); padding-top: 2px; }
+
+  /* ============ FOOTER ============ */
+  footer { padding: 44px 0 60px; border-top: 1px solid var(--border); color: var(--text-faint); font-size: 13.5px; }
+  footer .wrap { display: flex; justify-content: space-between; gap: 16px; flex-wrap: wrap; align-items: center; }
+
+  .inline-k { font-family: var(--mono); font-weight: 600; padding: 1px 5px; border-radius: 5px; font-size: .92em; }
+  mark.hl { background: var(--accent-soft); color: var(--accent); padding: 1px 5px; border-radius: 5px; font-weight: 600; }
+
+  :focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+</style>
+
+<!-- ============ НАВИГАЦИЯ ============ -->
+<header class="nav">
+  <div class="wrap nav-in">
+    <span class="brand">
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+        <path d="M12 2 4 5v6c0 4.5 3.2 7.8 8 9 4.8-1.2 8-4.5 8-9V5l-8-3Z"/>
+        <circle cx="8.4" cy="9.5" r="1.1"/><circle cx="12" cy="8.6" r="1.1"/><circle cx="15.6" cy="9.5" r="1.1"/>
+        <path d="M8.4 13c1 1.3 6.2 1.3 7.2 0"/>
+      </svg>
+      Kerberos
+    </span>
+    <nav class="nav-links" id="navlinks">
+      <a href="#lvl-basics" data-sec="problem cast ideas">1 · Основы</a>
+      <a href="#lvl-proto" data-sec="sim keys why">2 · Протокол</a>
+      <a href="#lvl-practice" data-sec="lab quiz">3 · Практика</a>
+      <a href="#lvl-security" data-sec="attacks xrealm">4 · Безопасность</a>
+      <a href="#lvl-deep" data-sec="advanced">5 · Глубины</a>
+      <a href="#lvl-final" data-sec="glossary cards exam">Финал</a>
+    </nav>
+    <button class="theme-btn" id="themeBtn" aria-label="Переключить тему">
+      <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/></svg>
+    </button>
+  </div>
+  <div id="progress"></div>
+</header>
+
+<!-- ============ HERO ============ -->
+<div class="hero">
+  <div class="wrap">
+    <div class="eyebrow">Аутентификация без пароля в сети</div>
+    <h1>
+      Kerberos
+      <span class="sub">Пароль ни разу не покидает ваш компьютер — и всё же сеть точно знает, что это вы. Вот как трёхголовый страж это устраивает: по шагам, с симулятором, картой ключей и живым квизом.</span>
+    </h1>
+    <div class="hero-cta">
+      <a href="#sim" class="btn primary">Запустить симулятор
+        <svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg>
+      </a>
+      <a href="#problem" class="btn ghost">Начать с азов</a>
+    </div>
+
+    <div class="hero-cast">
+      <div class="hero-head"><span class="num">1</span><div class="tag">Голова первая</div><h3>Клиент</h3><p>Вы (или ваша программа). Знаете пароль — и хотите попасть на сервис.</p></div>
+      <div class="hero-head"><span class="num">2</span><div class="tag">Голова вторая</div><h3>KDC</h3><p>Доверенный посредник. Раздаёт «билеты», зная секрет каждого.</p></div>
+      <div class="hero-head"><span class="num">3</span><div class="tag">Голова третья</div><h3>Сервис</h3><p>Файловый сервер, база, сайт. Впустит только по правильному билету.</p></div>
+    </div>
+  </div>
+</div>
+
+<main>
+
+<!-- ============ ОГЛАВЛЕНИЕ-ПУТЬ ============ -->
+<div class="path">
+  <div class="wrap">
+    <div class="plead">Маршрут курса · от новичка к матёрому</div>
+    <div class="path-grid">
+      <a class="path-card" href="#lvl-basics"><span class="pnum">Уровень 1</span><span class="pt">Основы</span><span class="pdots"><i class="on"></i><i></i><i></i><i></i><i></i></span><span class="pd">Зачем, участники, идеи</span></a>
+      <a class="path-card" href="#lvl-proto"><span class="pnum">Уровень 2</span><span class="pt">Протокол</span><span class="pdots"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span><span class="pd">Симулятор, ключи, «почему»</span></a>
+      <a class="path-card" href="#lvl-practice"><span class="pnum">Уровень 3</span><span class="pt">Практика</span><span class="pdots"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span><span class="pd">Терминал-лаба и квиз</span></a>
+      <a class="path-card" href="#lvl-security"><span class="pnum">Уровень 4</span><span class="pt">Безопасность</span><span class="pdots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span><span class="pd">Атаки, cross-realm, делегирование</span></a>
+      <a class="path-card" href="#lvl-deep"><span class="pnum">Уровень 5</span><span class="pt">Глубины</span><span class="pdots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><span class="pd">etypes, PAC, FAST, S4U, CVE</span></a>
+      <a class="path-card" href="#lvl-final"><span class="pnum">Финал</span><span class="pt">Экзамен</span><span class="pdots"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span><span class="pd">Словарь, карточки, тест</span></a>
+    </div>
+  </div>
+</div>
+
+<!-- ============ УРОВЕНЬ 1 ============ -->
+<div class="level" id="lvl-basics">
+  <div class="wrap">
+    <div class="level-meta">
+      <span class="level-tag">Уровень 1</span>
+      <span class="level-dots" aria-hidden="true"><i class="on"></i><i></i><i></i><i></i><i></i></span>
+      <span class="level-diff">для новичка</span>
+    </div>
+    <h2 class="level-title">Основы: зачем и кто</h2>
+    <p class="level-desc">Какую проблему решает Kerberos, кто участвует в разговоре и три идеи, на которых стоит весь протокол.</p>
+  </div>
+</div>
+
+<!-- ============ ЗАЧЕМ ============ -->
+<section id="problem">
+  <div class="wrap">
+    <div class="sec-label">Проблема</div>
+    <h2>Зачем вообще нужен Kerberos</h2>
+    <p class="sec-intro">Представьте сеть на пару сотен человек и десяток сервисов. Если каждый раз доказывать серверу, кто вы, отправляя ему пароль, — рано или поздно кто-то этот пароль перехватит. В MIT это поняли ещё в 80-х (проект Athena) и придумали способ обходиться вообще без пересылки пароля.</p>
+
+    <div class="compare">
+      <div class="col bad">
+        <h4>✗ Наивный способ</h4>
+        <ul>
+          <li>Пароль идёт по сети к каждому сервису — а значит, кто-то на этом пути может его подслушать.</li>
+          <li>Каждый сервис хранит пароли своих пользователей — взломали один сервер, утекла база паролей.</li>
+          <li>Подслушанный трафик можно просто повторить и зайти под чужим именем.</li>
+          <li>Сервер ничем не подтверждает, что он настоящий, — можно случайно «поговорить» с подделкой.</li>
+        </ul>
+      </div>
+      <div class="col good">
+        <h4>✓ Способ Kerberos</h4>
+        <ul>
+          <li>Пароль <b>вообще</b> не покидает вашу машину — даже в зашифрованном виде.</li>
+          <li>Секрет знает только KDC — сами сервисы паролей пользователей никогда не видят.</li>
+          <li>Каждый запрос помечен временем, так что подслушанный трафик бесполезен уже через пару минут.</li>
+          <li>Проверка идёт в обе стороны: сервис тоже обязан доказать, что он настоящий.</li>
+          <li>Пароль вводится один раз — дальше вы просто ходите по сервисам (это и называют SSO).</li>
+        </ul>
+      </div>
+    </div>
+
+    <p class="prose" style="margin-top:26px; color:var(--text-dim)">
+      А фокус на самом деле один: <mark class="hl">симметричное шифрование</mark>. Если у двоих есть один и тот же ключ, то сам факт, что сообщение расшифровалось, — уже доказательство личности собеседника. Ничего сложнее не нужно. Из этого простого приёма Kerberos и строит всю цепочку доверия — а понять протокол значит понять, <em>каким ключом</em> зашифрован каждый кусочек. Сейчас увидите это своими глазами.
+    </p>
+  </div>
+</section>
+
+<!-- ============ УЧАСТНИКИ ============ -->
+<section id="cast">
+  <div class="wrap">
+    <div class="sec-label">Действующие лица</div>
+    <h2>Кто участвует в разговоре</h2>
+    <p class="sec-intro">Протокол назвали в честь Цербера — трёхголового пса, который стерёг врата подземного мира. Здесь у него тоже три головы, и каждая играет свою роль.</p>
+
+    <div class="grid g-3">
+      <div class="card">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg></div>
+        <h3>Клиент</h3>
+        <p>Это вы, точнее — программа, которая действует от вашего имени. На старте у неё есть только <b>пароль</b>, и из него по фиксированному правилу получается <b>долговременный ключ</b> — что это значит, разберём чуть ниже, в блоке «Что значит „ключ выведен из пароля“».</p>
+      </div>
+      <div class="card">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 7.5h.01M7 16.5h.01"/></svg></div>
+        <h3>KDC — центр раздачи ключей</h3>
+        <p>Тот, кому доверяют все. Хранит ключ <b>каждого</b> участника сети — не сами пароли, а вычисленные из них ключи. Внутри KDC живут две службы: <b>AS</b> открывает вход в систему, <b>TGS</b> потом раздаёт билеты на конкретные сервисы. В Active Directory эту роль играет контроллер домена.</p>
+      </div>
+      <div class="card">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 9h16M9 20V9"/></svg></div>
+        <h3>Сервис</h3>
+        <p>То, к чему вы, собственно, идёте — файловый сервер, база данных, внутренний сайт. У него тоже есть учётная запись со своим паролем и своим долговременным ключом. Пустит только тех, кто явится с правильным билетом.</p>
+      </div>
+    </div>
+
+    <p class="prose" style="margin-top:22px; color:var(--text-dim)">
+      Всё это происходит внутри <mark class="hl">realm</mark> — административной области Kerberos. В Active Directory realm совпадает с доменом, и пишут его заглавными буквами: <span class="inline-k" style="background:var(--bg-3);border:1px solid var(--border)">EXAMPLE.COM</span>.
+    </p>
+  </div>
+</section>
+
+<!-- ============ ИДЕИ ============ -->
+<section id="ideas">
+  <div class="wrap">
+    <div class="sec-label">Три опоры</div>
+    <h2>Идеи, на которых держится всё</h2>
+    <p class="sec-intro">Держите в голове эти три вещи — и дальше протокол будет читаться как понятная история, а не как набор аббревиатур.</p>
+
+    <div class="grid g-3">
+      <div class="card">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></div>
+        <h3>Общий секрет</h3>
+        <p>Ключ, который знают только двое, — и им же шифруют, и им же расшифровывают (это и называют <b>симметричным</b>). Если сообщение открылось вашим ключом, значит, его закрыл именно тот, кто знает тот же секрет. Личность подтверждается, а сам секрет по сети так и не проехал.</p>
+      </div>
+      <div class="card">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M3 7h13l5 5-5 5H3z"/><circle cx="8" cy="12" r="1.4"/></svg></div>
+        <h3>Билет (ticket)</h3>
+        <p>Запечатанный конверт от KDC. Внутри — ваша личность и сеансовый ключ, но заперто всё ключом <b>получателя</b>, не вашим. Поэтому вы просто носите билет с собой и вскрыть его не можете при всём желании — только доставить по адресу.</p>
+      </div>
+      <div class="card">
+        <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/></svg></div>
+        <h3>Аутентификатор + метка времени</h3>
+        <p>Текущее время, зашифрованное сеансовым ключом. Получатель смотрит на часы и сверяет: время должно быть «прямо сейчас», обычно с запасом в пять минут. Так доказывается, что ключ у вас в руках именно сейчас, а не что вы переслали перехваченную вчерашнюю запись.</p>
+      </div>
+    </div>
+
+      <div class="callout">
+        <h3><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Что значит «ключ выведен из пароля» — и почему это не передача пароля</h3>
+        <p>Вот на этом месте обычно все и спотыкаются, так что разберём отдельно и не спеша. Пароль в Kerberos не хранится и не пересылается — нигде и никогда. А устроено это так:</p>
+        <ul>
+          <li><b>Вывод ключа.</b> Есть функция (в Kerberos её зовут <em>string2key</em>), которая перемалывает пароль в ключ фиксированной длины — и делает это только в одну сторону. Один и тот же пароль всегда даст один и тот же ключ, но пойти в обратную сторону, от ключа к паролю, практически невозможно.</li>
+          <li><b>Ключ никуда не едет.</b> Клиент и KDC вычисляют его каждый сам у себя. KDC получил свою копию один раз — в момент, когда вы придумывали или меняли пароль, — и с тех пор просто хранит её. При входе в систему пересылать уже нечего: обе стороны и так знают этот ключ.</li>
+          <li><b>Единственное, что реально летит по сети,</b> — метка времени, зашифрованная этим ключом. Ни пароль, ни ключ. KDC достаёт свою копию, расшифровывает — и если внутри оказывается вменяемое свежее время, делает вывод: этот человек действительно знает пароль.</li>
+        </ul>
+        <p class="analogy">Похоже на секретное рукопожатие, о котором двое договорились давным-давно. Чтобы доказать своим, вы делаете жест, который знает только посвящённый, — но не объясняете вслух, в чём он состоит. Кто-то посторонний может подглядеть жест, но повторить его завтра не выйдет: время подведёт. А вычислить сам секрет по одному наблюдению — тем более.</p>
+        <p class="caveat">Есть, впрочем, нюанс: сам ключ — секрет ничуть не слабее пароля. Если его вытащат прямо из памяти машины или доберутся до базы KDC — беда всё равно случится (об этом ниже, в разделе про атаки). Но именно по сети, именно во время входа, он не идёт — и в этом весь смысл конструкции.</p>
+      </div>
+
+    <div style="margin-top:26px" class="card">
+      <h3 style="margin-bottom:14px">Легенда ключей — запомните цвета, они одни и те же на всём сайте</h3>
+      <div class="keylegend" id="keyLegend"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ УРОВЕНЬ 2 ============ -->
+<div class="level" id="lvl-proto">
+  <div class="wrap">
+    <div class="level-meta">
+      <span class="level-tag">Уровень 2</span>
+      <span class="level-dots" aria-hidden="true"><i class="on"></i><i class="on"></i><i></i><i></i><i></i></span>
+      <span class="level-diff">уверенный пользователь</span>
+    </div>
+    <h2 class="level-title">Протокол: как это работает</h2>
+    <p class="level-desc">Шесть сообщений в пошаговом симуляторе, карта всех ключей и разбор инженерных решений — «почему именно так».</p>
+  </div>
+</div>
+
+<!-- ============ СИМУЛЯТОР ============ -->
+<section id="sim">
+  <div class="wrap">
+    <div class="sec-label">Главное · интерактив</div>
+    <h2>Симулятор протокола: шесть сообщений</h2>
+    <p class="sec-intro">Кликайте по шагам или жмите стрелки — и смотрите на цвет замков. Каждый цвет — свой ключ, и по нему сразу видно, кто способен открыть содержимое, а кто просто носит его с собой. У участников подсвечивается именно то, что задействовано на текущем шаге.</p>
+
+    <div class="sim">
+      <!-- участники -->
+      <div class="actors" id="actors"></div>
+
+      <!-- карта потока -->
+      <div class="flowmap"><svg id="flowsvg" viewBox="0 0 600 68" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg></div>
+
+      <!-- контролы -->
+      <div class="stepbar">
+        <button class="navbtn" id="prevBtn" aria-label="Предыдущий шаг"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>
+        <div class="steps-dots" id="dots"></div>
+        <button class="navbtn" id="nextBtn" aria-label="Следующий шаг"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button>
+      </div>
+
+      <!-- детали -->
+      <div class="detail">
+        <div class="dpanel" id="dpanel"></div>
+        <div class="envelope" id="envelope"></div>
+      </div>
+    </div>
+
+    <p class="prose" style="margin-top:22px;color:var(--text-dim)">
+      Обратите внимание, что происходит на шагах <b>3–4</b>: KDC там уже <em>не спрашивает пароль</em>. Он просто доверяет билету TGT, который сам же чуть раньше и выдал. Вот и весь секрет <mark class="hl">единого входа (SSO)</mark> — пароль вводится ровно один раз, а дальше за вас работают билеты.
+    </p>
+  </div>
+</section>
+
+<!-- ============ КЛЮЧИ ============ -->
+<section id="keys">
+  <div class="wrap">
+    <div class="sec-label">Карта секретов</div>
+    <h2>Кто какой ключ знает</h2>
+    <p class="sec-intro">Если разобраться, кто какой ключ держит в руках, — вся безопасность Kerberos сразу становится понятной. Долговременные ключи (те, что из паролей) живут месяцами, сеансовые создаются под конкретный разговор и умирают вместе с ним.</p>
+
+    <div class="tablewrap">
+      <table>
+        <thead>
+          <tr><th>Ключ</th><th>Тип</th><th>Откуда берётся</th><th>Знает клиент?</th><th>Знает KDC?</th><th>Знает сервис?</th></tr>
+        </thead>
+        <tbody id="keyTable"></tbody>
+      </table>
+    </div>
+    <p class="prose" style="margin-top:20px;color:var(--text-dim)">
+      Присмотритесь к строке <span class="keychip k-tgs"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>K_TGS</span> — это секрет учётки <span class="inline-k" style="background:var(--bg-3);border:1px solid var(--border)">krbtgt</span>, и знает его только KDC. Кажется мелочью, но это самое уязвимое место всей схемы: кто завладеет этим ключом, сможет подделать вообще любой билет. Именно отсюда растёт «золотой билет», о котором речь пойдёт в разделе про атаки.
+    </p>
+  </div>
+</section>
+
+<!-- ============ ПОЧЕМУ ============ -->
+<section id="why">
+  <div class="wrap">
+    <div class="sec-label">Инженерные решения</div>
+    <h2>Почему протокол устроен именно так</h2>
+    <p class="sec-intro">За каждым решением в этом протоколе стоит осознанный компромисс — ничего случайного тут нет. Разберём главные «а почему не проще», и вы увидите: то, что раньше казалось произвольным набором правил, на самом деле логично от начала до конца.</p>
+
+    <div class="accordion">
+      <details open>
+        <summary><span class="qn">01</span> Почему два шага — сначала TGT, потом билет на сервис? Нельзя ли сразу?
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></summary>
+        <div class="abody">
+          Технически можно было бы и в один шаг — но тогда ключ, выведенный из пароля, приходилось бы доставать при каждом обращении к каждому сервису. А чем чаще ключ извлекается из памяти, тем дольше он там «светится» и тем выше риск, что его оттуда стащат. Разбив вход на два шага, авторы протокола получили сразу три вещи: долговременный ключ используется буквально один раз, при получении TGT, а дальше в ход идут одноразовые сеансовые ключи; один TGT открывает десятки сервисов без повторного ввода пароля — это и есть единый вход; и служба TGS вообще никогда не видит пароль, только билет.
+          <div class="tradeoff"><b>Плата за это:</b> один лишний обмен с KDC. Но он дешёвый и происходит нечасто, так что сделка явно в плюс.</div>
+        </div>
+      </details>
+
+      <details>
+        <summary><span class="qn">02</span> Почему метки времени, а не «пришли случайное число — подпиши» (challenge-response)?
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></summary>
+        <div class="abody">
+          Challenge-response — это когда сервер сначала присылает случайное число, а клиент в ответ его подписывает. Работает надёжно, но требует лишнего круга обмена: сначала вызов, потом ответ. Метка времени этот круг просто убирает — клиент сразу прикладывает доказательство свежести, не дожидаясь вопроса. Меньше задержек, проще протокол.
+          <div class="tradeoff"><b>Плата за это:</b> часы клиента, KDC и сервисов обязаны быть синхронизированы, обычно с допуском в пять минут. Отсюда и растёт та зависимость Kerberos от NTP, о которой вечно забывают в проблемных сетях, а от повторов внутри этого окна дополнительно спасает replay-кэш.</div>
+        </div>
+      </details>
+
+      <details>
+        <summary><span class="qn">03</span> Почему симметричное шифрование, а не пароль каждый раз или асимметрика?
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></summary>
+        <div class="abody">
+          Симметричные ключи быстрые, и им не нужно, чтобы каждая пара «клиент–сервис» заранее обменивалась секретами напрямую — за это отвечает KDC, который знает всех и раздаёт сеансовые ключи на лету. Слать пароль каждый раз — плохая идея по уже известным причинам. А открытые ключи (асимметрика) работают надёжно, но медленнее и требуют целой инфраструктуры сертификатов, которую ещё нужно где-то развернуть и поддерживать.
+          <div class="tradeoff"><b>Тут есть нюанс:</b> асимметрику Kerberos всё же умеет использовать — на самом первом шаге, через расширение PKINIT, это вход по смарт-карте или сертификату. Но ядро протокола осталось симметричным ради скорости.</div>
+        </div>
+      </details>
+
+      <details>
+        <summary><span class="qn">04</span> KDC знает секрет каждого — это же единая точка отказа и лакомая цель?
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></summary>
+        <div class="abody">
+          Да, именно так, и это решение принято совершенно осознанно. KDC — корень всего доверия в системе: если его взломают, а особенно если доберутся до ключа krbtgt, рушится буквально всё (см. раздел про Golden Ticket). Взамен вы получаете то, что пароли пользователей больше не нужно хранить на каждом отдельном сервисе.
+          <div class="tradeoff"><b>Как с этим живут:</b> KDC дублируют — контроллеров домена обычно несколько, ключ krbtgt берегут особо и периодически меняют, а доступ к самому KDC ограничивают жёстче всего остального.</div>
+        </div>
+      </details>
+
+      <details>
+        <summary><span class="qn">05</span> Почему билет шифруется ключом получателя, а не клиента?
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></summary>
+        <div class="abody">
+          Потому что клиент здесь — просто курьер, и ему не полагается ни читать содержимое билета, ни тем более его подделывать. Открыть билет способен только тот, кому он адресован, — у кого есть нужный ключ. По сути, KDC этим билетом «расписывается» перед сервисом за клиента, а сам клиент физически не может вмешаться в то, что внутри написано.
+        </div>
+      </details>
+
+      <details>
+        <summary><span class="qn">06</span> Почему TGT живёт всего около 10 часов?
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></summary>
+        <div class="abody">
+          Классический баланс между удобством и безопасностью. Десять часов — это примерно рабочий день, так что пароль вводится раз в сутки, а не по десять раз на дню. Но если TGT всё-таки украдут, у злоумышленника будет не безграничное время на его использование, а всего несколько часов. При необходимости билет можно продлевать вплоть до предела в несколько дней, а дальше всё равно придётся входить заново, с паролём.
+        </div>
+      </details>
+    </div>
+  </div>
+</section>
+
+<!-- ============ УРОВЕНЬ 3 ============ -->
+<div class="level" id="lvl-practice">
+  <div class="wrap">
+    <div class="level-meta">
+      <span class="level-tag">Уровень 3</span>
+      <span class="level-dots" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i></i><i></i></span>
+      <span class="level-diff">практик</span>
+    </div>
+    <h2 class="level-title">Практика: руками в терминале</h2>
+    <p class="level-desc">Настоящие команды Kerberos в безопасной песочнице и контрольный квиз на понимание.</p>
+  </div>
+</div>
+
+<!-- ============ ЛАБА ============ -->
+<section id="lab">
+  <div class="wrap">
+    <div class="sec-label">Практика · песочница</div>
+    <h2>Лаборатория: команды Kerberos вживую</h2>
+    <p class="sec-intro">Теория теорией, но лучше один раз потрогать руками. Здесь настоящие команды MIT Kerberos и их настоящий вывод — только выполняются они в безопасной песочнице, а не на боевой машине. Каждое действие подписано ссылкой на шаг протокола, к которому оно относится. Выполните задания справа или просто наберите <code>help</code> и осмотритесь.</p>
+
+    <div id="labMount"></div>
+
+    <div class="reference">
+      <div class="refgrid">
+        <div class="refcard">
+          <h3>Linux · MIT Kerberos / Heimdal</h3>
+          <div class="sub">пакет krb5-user (Debian/Ubuntu) или krb5-workstation (RHEL)</div>
+          <dl>
+            <dt>kinit alice</dt><dd>Запросить TGT (AS-обмен). Спросит пароль.</dd>
+            <dt>klist</dt><dd>Показать кэш: TGT и сервисные билеты.</dd>
+            <dt>klist -e</dt><dd>Плюс алгоритмы шифрования каждого билета.</dd>
+            <dt>klist -f</dt><dd>Плюс флаги: F=forwardable, I=initial, R=renewable…</dd>
+            <dt>kvno host/srv.example.com</dt><dd>Получить сервисный билет (TGS-обмен) и показать версию ключа.</dd>
+            <dt>kdestroy</dt><dd>Уничтожить кэш билетов.</dd>
+            <dt>kpasswd</dt><dd>Сменить свой пароль в KDC.</dd>
+            <dt>kadmin / kadmin.local</dt><dd>Администрировать principal и ключи.</dd>
+            <dt>ktutil</dt><dd>Управлять keytab-файлами сервисов.</dd>
+            <dt>/etc/krb5.conf</dt><dd>Настройки: realm, адреса KDC, домены.</dd>
+          </dl>
+        </div>
+        <div class="refcard">
+          <h3>Windows · Active Directory</h3>
+          <div class="sub">встроено в любую машину, введённую в домен</div>
+          <dl>
+            <dt>klist</dt><dd>Показать закэшированные билеты Kerberos.</dd>
+            <dt>klist tgt</dt><dd>Показать текущий TGT.</dd>
+            <dt>klist purge</dt><dd>Очистить кэш билетов (аналог kdestroy).</dd>
+            <dt>klist get host/srv</dt><dd>Запросить сервисный билет на лету.</dd>
+            <dt>setspn -L &lt;учётка&gt;</dt><dd>Показать SPN учётной записи.</dd>
+            <dt>setspn -A http/web01 svc_web</dt><dd>Зарегистрировать SPN (нужны права).</dd>
+            <dt>whoami /upn</dt><dd>Показать ваш principal (UPN).</dd>
+            <dt>nltest /dsgetdc:домен</dt><dd>Найти контроллер домена (KDC).</dd>
+            <dt>w32tm /query /status</dt><dd>Проверить синхронизацию времени — критично для Kerberos.</dd>
+          </dl>
+        </div>
+      </div>
+      <div class="card" style="margin-top:16px">
+        <h3 style="font-size:1.05rem;margin-bottom:8px">Как поднять настоящую лабу</h3>
+        <p style="font-size:14px;color:var(--text-dim);margin:0">
+          На <b>Linux</b>: поставьте krb5-user, пропишите realm и адрес KDC в <span class="inline-k" style="background:var(--bg-2);border:1px solid var(--border)">/etc/krb5.conf</span>; собственный KDC поднимается пакетом krb5-kdc. На <b>Windows</b> любая машина в домене AD — уже полноценный Kerberos-клиент, команды <span class="inline-k" style="background:var(--bg-2);border:1px solid var(--border)">klist</span> работают из коробки. Для <b>авторизованного</b> аудита протокола (Kerberoasting, Pass-the-Ticket) в своей лаборатории применяют Rubeus, Impacket и mimikatz — только с письменного разрешения владельца системы.
+        </p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ КВИЗ ============ -->
+<section id="quiz">
+  <div class="wrap">
+    <div class="sec-label">Проверка</div>
+    <h2>Закрепим: мини-квиз</h2>
+    <p class="sec-intro">Шесть вопросов на понимание, а не на зубрёжку. Выбирайте ответ — сразу увидите объяснение.</p>
+    <div class="quiz" id="quiz"></div>
+    <div class="quizscore" id="score">Отвечено: <b>0</b> из 6 · Верно: <b>0</b></div>
+  </div>
+</section>
+
+<!-- ============ УРОВЕНЬ 4 ============ -->
+<div class="level" id="lvl-security">
+  <div class="wrap">
+    <div class="level-meta">
+      <span class="level-tag">Уровень 4</span>
+      <span class="level-dots" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i></i></span>
+      <span class="level-diff">безопасник</span>
+    </div>
+    <h2 class="level-title">Безопасность: как ломают и защищают</h2>
+    <p class="level-desc">Классические атаки на протокол и работа между доменами: cross-realm и делегирование — с их рисками.</p>
+  </div>
+</div>
+
+<!-- ============ АТАКИ ============ -->
+<section id="attacks">
+  <div class="wrap">
+    <div class="sec-label">Тёмная сторона</div>
+    <h2>Как Kerberos атакуют</h2>
+    <p class="sec-intro">Есть проверенный способ до конца понять любой протокол — посмотреть, как его ломают. Ниже шесть атак, и каждая метит в конкретный ключ из карты выше: смотрите на подпись «слабое звено», и станет ясно, что именно защищаем.</p>
+    <div class="grid g-2" id="attacks-grid"></div>
+    <p class="prose" style="margin-top:22px;color:var(--text-dim)">
+      Если вынести из этого раздела одну мысль, пусть будет такая: вся прочность Kerberos держится на двух вещах — секретности долговременных ключей и стойкости паролей сервисных учёток. Слабый пароль у одного-единственного сервиса или утечка ключа <span class="inline-k" style="background:var(--bg-3);border:1px solid var(--border)">krbtgt</span> — и вся схема обрушивается разом.
+    </p>
+  </div>
+</section>
+
+<!-- ============ CROSS-REALM ============ -->
+<section id="xrealm">
+  <div class="wrap">
+    <div class="sec-label">Следующий уровень</div>
+    <h2>За пределами одного домена: cross-realm и делегирование</h2>
+    <p class="sec-intro">Всё, что мы разобрали, работает внутри одного realm. А что, если нужный сервис сидит в чужом домене? Или сам сервис должен от вашего имени сходить куда-то ещё дальше? Для обеих ситуаций есть свои расширения протокола, и оба, что приятно, построены на той же идее общего секрета, которую вы уже знаете.</p>
+
+    <h3 style="font-size:1.35rem;margin-bottom:6px">Cross-realm: доступ в соседний домен</h3>
+    <p class="prose" style="color:var(--text-dim);margin-bottom:20px">Допустим, клиент из <b>REALM-A</b> хочет попасть на сервис в <b>REALM-B</b>. Два KDC заранее — заблаговременно, ещё до всякого запроса — договариваются о <mark class="hl">межреалмовом ключе доверия</mark>. Это тот же общий секрет, только теперь между двумя серверами, а не между человеком и сервисом. Дальше клиент идёт по цепочке:</p>
+
+    <div class="xflow">
+      <div class="xnode"><div class="b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg></div><div class="l">Клиент</div><div class="s">REALM-A</div></div>
+      <div class="xarrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span class="an">1·2</span></div>
+      <div class="xnode"><div class="b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/></svg></div><div class="l">KDC-A</div><div class="s">свой</div></div>
+      <div class="xarrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span class="an">3</span></div>
+      <div class="xnode"><div class="b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/></svg></div><div class="l">KDC-B</div><div class="s">чужой</div></div>
+      <div class="xarrow"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg><span class="an">4</span></div>
+      <div class="xnode"><div class="b"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 9h16M9 20V9"/></svg></div><div class="l">Сервис</div><div class="s">REALM-B</div></div>
+    </div>
+
+    <ol class="xsteps">
+      <li><span class="n">1.</span><span>Сначала клиент получает самый обычный <b>TGT</b> у себя в KDC-A — тот же AS-обмен, что мы уже разбирали.</span></li>
+      <li><span class="n">2.</span><span>Дальше просит билет к сервису — но сервис-то в чужом домене. И KDC-A вместо сервисного билета выдаёт <b>referral-TGT</b>: пропуск не к сервису, а к KDC-B, зашифрованный тем самым межреалмовым ключом доверия.</span></li>
+      <li><span class="n">3.</span><span>С этим referral-TGT клиент идёт уже к <b>KDC-B</b>. Тот расшифровывает его общим ключом, видит, что за клиента ручается KDC-A, — и со спокойной душой выдаёт полноценный <b>сервисный билет</b> в своём домене.</span></li>
+      <li><span class="n">4.</span><span>Дальше всё как обычно: клиент предъявляет билет сервису в REALM-B, обычный AP-обмен. Готово.</span></li>
+    </ol>
+    <p class="prose" style="color:var(--text-dim);margin-top:16px">Важное свойство: доверие тут <b>транзитивно</b>. Если A доверяет B, а B доверяет C, то клиент из A доберётся и до C — просто пройдёт по цепочке referral-ов чуть подольше. Именно на этом принципе стоит лес доменов Active Directory с его автоматическими доверительными связями.</p>
+
+    <h3 style="font-size:1.35rem;margin:38px 0 6px">Делегирование: сервис действует от вашего имени</h3>
+    <p class="prose" style="color:var(--text-dim);margin-bottom:20px">Другая ситуация: вы зашли на веб-сервер, а тому нужно сходить в базу данных — но не от своего имени, а от <b>вашего</b>. Как серверу аутентифицироваться в базе так, будто он — это вы? Есть три способа это устроить, и они сильно отличаются по степени риска.</p>
+
+    <div class="grid g-3">
+      <div class="card">
+        <span class="pill danger">высокий риск</span>
+        <h3>Unconstrained<br>неограниченное</h3>
+        <p>Самый простой и самый опасный вариант: клиент прямо пересылает серверу свой TGT. После этого сервер может выдать себя за клиента перед <b>любым</b> сервисом в домене, вообще без ограничений. Взломали такой сервер — получили билеты всех, кто на него хоть раз заходил.</p>
+      </div>
+      <div class="card">
+        <span class="pill warn">ограниченно</span>
+        <h3>Constrained (S4U)</h3>
+        <p>Сервер по-прежнему действует от имени клиента, но только к тем сервисам, что заранее прописаны в списке — и никуда больше. Реализуется парой механизмов: S4U2Self получает билет «на себя» от имени пользователя, а S4U2Proxy — уже билет к разрешённому бэкенду.</p>
+      </div>
+      <div class="card">
+        <span class="pill ok">гибко</span>
+        <h3>RBCD<br>resource-based</h3>
+        <p>По сути то же ограниченное делегирование, только список «кому разрешено делегировать ко мне» задаёт сам ресурс-приёмник, а не тот сервер, что делегирует. Управлять этим удобнее, да и права администратора домена уже не требуются.</p>
+      </div>
+    </div>
+    <div class="attack" style="margin-top:16px">
+      <h3><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--danger)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a7 7 0 0 0-4 12.7V18a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2.3A7 7 0 0 0 12 3Z"/><circle cx="9.5" cy="12" r="1"/><circle cx="14.5" cy="12" r="1"/></svg>Почему это важно для безопасности</h3>
+      <p>Unconstrained delegation — один из самых частых способов повышения привилегий в Active Directory, и не зря: сервер с таким правом фактически копит билеты всех своих посетителей. Найти в домене такой сервер и воспользоваться им — задача почти рутинная для того, кто знает, куда смотреть.</p>
+      <div class="fix"><b>Защита: </b>помечать критичные учётки как «конфиденциальные, делегирование запрещено», включать их в группу Protected Users, а там, где делегирование всё же нужно, брать constrained или RBCD вместо unconstrained.</div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ УРОВЕНЬ 5 ============ -->
+<div class="level" id="lvl-deep">
+  <div class="wrap">
+    <div class="level-meta">
+      <span class="level-tag">Уровень 5</span>
+      <span class="level-dots" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span>
+      <span class="level-diff">для матёрых</span>
+    </div>
+    <h2 class="level-title">Глубины: внутренности, которые знают немногие</h2>
+    <p class="level-desc">Тут спотыкаются даже опытные админы. Как выводятся ключи для разных etype, что такое PAC и почему вокруг него столько CVE, как FAST защищает предаутентификацию и почему krbtgt меняют дважды.</p>
+  </div>
+</div>
+
+<!-- ============ ГЛУБИНЫ ============ -->
+<section id="advanced">
+  <div class="wrap">
+    <div class="sec-label">Только для подготовленных</div>
+    <h2>Внутренности Kerberos</h2>
+    <p class="sec-intro">Дальше пойдёт материал того уровня, будто вы уже читали RFC 4120 и документацию MS-KILE — или собираетесь. Если всё предыдущее легло в голове гладко, здесь картина достроится до конца, вместе с механикой, что стоит за громкими CVE последних лет.</p>
+
+    <h3 class="adv-h"><span class="hn">5.1</span> Типы шифрования и вывод ключей</h3>
+    <p class="adv-p">При каждом обмене клиент и KDC договариваются об <b>etype</b> — конкретном алгоритме шифрования. И это далеко не формальность: от выбора etype напрямую зависит, насколько дорого будет перебирать пароль офлайн. Разница между RC4 и AES здесь — это разница между «взломаю за пару часов» и «не взломаю вообще, даже с фермой видеокарт».</p>
+    <div class="tablewrap">
+      <table>
+        <thead><tr><th>etype</th><th>Алгоритм</th><th>Как выводится ключ</th><th>Соль</th><th>Стойкость к перебору</th></tr></thead>
+        <tbody>
+          <tr><td><b>23</b><div class="note">RC4-HMAC</div></td><td>RC4 + HMAC-MD5</td><td>ключ = NT-хэш = MD4(пароль)</td><td class="note">нет</td><td><span class="pill danger">слабая</span></td></tr>
+          <tr><td><b>17</b><div class="note">AES128-CTS</div></td><td>AES-128 + SHA1</td><td>PBKDF2-HMAC-SHA1, 4096 итераций</td><td class="note">realm + principal</td><td><span class="pill ok">хорошая</span></td></tr>
+          <tr><td><b>18</b><div class="note">AES256-CTS</div></td><td>AES-256 + SHA1</td><td>PBKDF2-HMAC-SHA1, 4096 итераций</td><td class="note">realm + principal</td><td><span class="pill ok">лучшая</span></td></tr>
+          <tr><td><b>1/3</b><div class="note">DES</div></td><td>DES-CBC</td><td>устаревший вывод</td><td class="note">—</td><td><span class="pill danger">сломано</span></td></tr>
+        </tbody>
+      </table>
+    </div>
+    <div class="kd"><span class="c"># RC4-HMAC (etype 23) — перебор идёт часами</span>
+K_client = MD4( UTF-16LE(пароль) )            <span class="c"># это и есть NT-хэш: без соли, без итераций</span>
+
+<span class="c"># AES256 (etype 18) — перебор кратно дороже</span>
+<span class="k">соль</span>     = <span class="s">"EXAMPLE.COM" + "alice"</span>            <span class="c"># realm + principal, привязано к имени!</span>
+K_client = PBKDF2_HMAC_SHA1(пароль, <span class="k">соль</span>, <span class="k">4096</span>)  <span class="c"># → 256-битный ключ</span></div>
+    <div class="attack">
+      <h3><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--danger)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a7 7 0 0 0-4 12.7V18a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2.3A7 7 0 0 0 12 3Z"/><circle cx="9.5" cy="12" r="1"/><circle cx="14.5" cy="12" r="1"/></svg>Encryption downgrade (RC4-роастинг)</h3>
+      <p>Атакующий намеренно запрашивает билет с etype <b>RC4</b>, даже если учётка поддерживает AES: RC4-материал перебирается кратно быстрее. Это тихое понижение стойкости на ровном месте.</p>
+      <div class="fix"><b>Защита: </b>отключить RC4 (<span class="inline-k" style="background:var(--bg-2);border:1px solid var(--border)">msDS-SupportedEncryptionTypes</span> → только AES), мониторить билеты с etype 23. Помните: соль привязана к имени principal — переименование учётки инвалидирует AES-ключ.</div>
+    </div>
+
+    <h3 class="adv-h"><span class="hn">5.2</span> PAC: авторизация внутри аутентификации</h3>
+    <p class="adv-p">Сам по себе Kerberos отвечает лишь на вопрос «кто ты». А приложению обычно нужен ещё и ответ на «что тебе можно». Поэтому Microsoft добавила в билет расширение <b>PAC</b> (Privilege Attribute Certificate) — SID пользователя и список его групп прямо внутри билета. Получается, что авторизация едет вместе с аутентификацией, а не запрашивается отдельным походом в каталог.</p>
+    <div class="grid g-3">
+      <div class="card"><h3>Что внутри</h3><p>SID пользователя, SID его групп, имя, время входа, применимые политики. По этим данным сервис и решает, что вам разрешено, — не бегая в AD за каждым отдельным правом.</p></div>
+      <div class="card"><h3>Две (а теперь больше) подписи</h3><p>PAC подписан сразу двумя ключами — сервиса и krbtgt, — так что подменить свои группы клиент не может при всём желании. А после патчей 2021–2022 к этим подписям добавились ещё и расширенные.</p></div>
+      <div class="card"><h3>Валидация PAC</h3><p>Чаще всего сервис просто доверяет подписи и не проверяет её лишний раз. В строгом режиме он может попросить KDC подтвердить PAC отдельно — ценой лишнего сетевого похода. Именно отключённая проверка исторически и открывала дыры.</p></div>
+    </div>
+    <div class="grid g-2" style="margin-top:16px">
+      <div class="attack">
+        <h3><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--danger)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a7 7 0 0 0-4 12.7V18a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2.3A7 7 0 0 0 12 3Z"/><circle cx="9.5" cy="12" r="1"/><circle cx="14.5" cy="12" r="1"/></svg>Bronze Bit · CVE-2020-17049</h3>
+        <p>Уязвимость позволяла подкрутить флаг forwardable прямо в обмене S4U2Proxy — и делегирование срабатывало даже там, где его явно запретили, включая учётки, помеченные как «неделегируемые».</p>
+        <div class="fix"><b>Защита: </b>патчи ноября 2020 года и аккуратно выстроенные ограничения делегирования.</div>
+      </div>
+      <div class="attack">
+        <h3><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--danger)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a7 7 0 0 0-4 12.7V18a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2.3A7 7 0 0 0 12 3Z"/><circle cx="9.5" cy="12" r="1"/><circle cx="14.5" cy="12" r="1"/></svg>noPac / sAMAccountName spoofing · CVE-2021-42278 + 42287</h3>
+        <p>Хитрая связка из двух багов: машинную учётку переименовывали под имя контроллера домена, а KDC, не проверив как следует, выдавал на неё билет с правами самого DC. Итог — путь от рядового пользователя до администратора домена всего в пару шагов.</p>
+        <div class="fix"><b>Защита: </b>патчи ноября 2021 (KB5008380 и последующие), строгая проверка PAC, наблюдение за Event ID 4768/4769.</div>
+      </div>
+    </div>
+
+    <h3 class="adv-h"><span class="hn">5.3</span> FAST / armoring: броня для предаутентификации</h3>
+    <p class="adv-p">У обычной предаутентификации есть слабое место — она зашифрована ключом из пароля, а значит уязвима к офлайн-перебору (тому самому AS-REP / AS-REQ roasting). <b>Kerberos FAST</b> (Flexible Authentication Secure Tunneling, чаще его называют просто armoring) решает это радикально: весь AS-обмен заворачивается в защищённый канал, «бронированный» билетом машины. После такой брони перехваченный трафик атакующему уже ничем не поможет — перебирать там нечего.</p>
+    <div class="adv-note"><b>На практике:</b> нужна поддержка и от клиента, и от KDC; в Active Directory включается политикой «Kerberos armoring» (compound authentication). Стоит включить везде, где важна защита от roasting-атак, — это одна из немногих мер, что бьёт по проблеме в корне, а не латает симптомы.</div>
+
+    <h3 class="adv-h"><span class="hn">5.4</span> Ротация krbtgt и версии ключей (kvno)</h3>
+    <p class="adv-p">Как и у любого ключа, у krbtgt есть номер версии — <b>kvno</b>, — и каждый выданный TGT подписан именно текущей версией. Тонкость в другом: когда пароль krbtgt меняют, KDC не выбрасывает старую версию сразу, а хранит сразу две — текущую (N) и предыдущую (N-1), — чтобы уже выданные билеты не отвалились в одну секунду.</p>
+    <div class="adv-note"><b>Почему меняют дважды:</b> именно из-за этой особенности. Одна-единственная смена оставляет старый ключ (N-1) всё ещё рабочим — а значит, если krbtgt уже украли раньше, он по-прежнему годится для золотого билета. Поэтому после компрометации пароль krbtgt меняют дважды подряд, выждав между сменами дольше, чем живёт самый долгий билет, — только тогда старая версия действительно вымывается из системы.</div>
+
+    <h3 class="adv-h"><span class="hn">5.5</span> Флаги билетов и протокольный переход (S4U)</h3>
+    <p class="adv-p">За поведением билета следят флаги — <span class="inline-k" style="background:var(--bg-2);border:1px solid var(--border)">forwardable</span>, <span class="inline-k" style="background:var(--bg-2);border:1px solid var(--border)">proxiable</span>, <span class="inline-k" style="background:var(--bg-2);border:1px solid var(--border)">renewable</span>, <span class="inline-k" style="background:var(--bg-2);border:1px solid var(--border)">ok-as-delegate</span>, <span class="inline-k" style="background:var(--bg-2);border:1px solid var(--border)">pre-authent</span> и ещё несколько. И вся механика делегирования, которую мы разбирали раньше, на самом деле держится именно на них.</p>
+    <div class="accordion">
+      <details>
+        <summary><span class="qn">S4U2Self</span> Протокольный переход
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></summary>
+        <div class="abody">Позволяет сервису получить билет на самого себя, но от имени пользователя, который к нему по Kerberos вообще ни разу не обращался — скажем, вошёл через веб-форму или по сертификату. Штука мощная для интеграций, но и опасная: право TRUSTED_TO_AUTH_FOR_DELEGATION превращает такую учётку в лакомую цель для атакующих.</div>
+      </details>
+      <details>
+        <summary><span class="qn">S4U2Proxy</span> Делегирование к бэкенду
+          <svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></summary>
+        <div class="abody">Получив билет из S4U2Self, сервис идёт с ним к KDC и просит уже билет к конкретному разрешённому бэкенду — снова от имени пользователя. Список того, к чему делегировать можно (msDS-AllowedToDelegateTo), — это, по сути, и есть constrained delegation целиком. А RBCD просто переносит это же разрешение на сторону принимающего ресурса.</div>
+      </details>
+    </div>
+
+    <h3 class="adv-h"><span class="hn">5.6</span> Жизненный цикл билета — интерактивно</h3>
+    <p class="adv-p">У билета на самом деле не одно «время жизни», а сразу три отметки: когда он начал действовать (start), когда истечёт (expires) и до какого предела его вообще можно продлевать (renew-till). Продляемый билет можно освежать в пределах этого предела, а постдатированный вообще начинает работать только в будущем. Подвигайте ползунок «сейчас» ниже и попробуйте продлить билет в разные моменты — так это устройство куда понятнее, чем на словах.</p>
+    <div class="tl-wrap">
+      <div class="tl-track" id="tlTrack">
+        <div class="tl-seg tl-invalid" id="tlInvalid" style="display:none"></div>
+        <div class="tl-seg tl-renew" id="tlRenew"></div>
+        <div class="tl-seg tl-valid" id="tlValid"></div>
+        <div class="tl-now" id="tlNow"></div>
+      </div>
+      <div class="tl-ticks" id="tlTicks"></div>
+      <input type="range" min="0" max="168" value="0" step="1" class="tl-slider" id="tlSlider" aria-label="Текущий момент времени">
+      <div class="tl-controls">
+        <button class="btn primary" id="tlRenewBtn">↻ Продлить (renew)</button>
+        <button class="btn ghost" id="tlResetBtn">Новый вход (kinit)</button>
+        <label class="tl-toggle"><input type="checkbox" id="tlPostdate"> Постдатировать билет</label>
+      </div>
+      <div class="tl-status" id="tlStatus"></div>
+      <div class="tl-meta" id="tlMeta"></div>
+      <div class="tl-legend">
+        <span><i style="background:color-mix(in srgb,var(--ok) 30%,transparent);border:1px solid var(--ok)"></i> действителен</span>
+        <span><i style="background:var(--accent-soft);border:1px solid var(--accent)"></i> зона продления (renewable)</span>
+        <span><i style="background:var(--danger-soft);border:1px dashed var(--danger)"></i> ещё не действует (postdated)</span>
+        <span><i style="width:4px;background:var(--text)"></i> сейчас</span>
+      </div>
+    </div>
+    <div class="adv-note"><b>На практике:</b> в выводе <span class="inline-k" style="background:var(--bg-2);border:1px solid var(--border)">klist</span> это поля <b>Valid starting</b>, <b>Expires</b> и <b>Renew until</b>. Короткое время жизни сужает окно для украденного билета (pass-the-ticket), а renew-till — предел, после которого нужен полноценный повторный вход.</div>
+  </div>
+</section>
+
+<!-- ============ ФИНАЛ ============ -->
+<div class="level" id="lvl-final">
+  <div class="wrap">
+    <div class="level-meta">
+      <span class="level-tag">Финал</span>
+      <span class="level-dots" aria-hidden="true"><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i><i class="on"></i></span>
+      <span class="level-diff">повторение и проверка</span>
+    </div>
+    <h2 class="level-title">Справочник, карточки и экзамен</h2>
+    <p class="level-desc">Словарь терминов для быстрой сверки, флеш-карточки для памяти и итоговый тест с продвинутым блоком по всему курсу.</p>
+  </div>
+</div>
+
+<!-- ============ ГЛОССАРИЙ ============ -->
+<section id="glossary" class="glossary">
+  <div class="wrap">
+    <div class="sec-label">Шпаргалка</div>
+    <h2>Словарь терминов</h2>
+    <p class="sec-intro">Всё, что стоит держать в голове, — на одной странице.</p>
+    <div class="g-inner">
+      <dl id="glossary"></dl>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ФЛЕШ-КАРТОЧКИ ============ -->
+<section id="cards">
+  <div class="wrap">
+    <div class="sec-label">Закрепление в памяти</div>
+    <h2>Флеш-карточки</h2>
+    <p class="sec-intro">Классическое интервальное повторение. Прочитайте вопрос, переверните карточку, честно оцените себя. «Повторить позже» вернёт карточку в конец колоды — так вы прогоните трудные термины несколько раз, пока не запомните.</p>
+
+    <div class="deck">
+      <div class="deck-meta" id="deckMeta"></div>
+      <div class="fcard" id="fcard" tabindex="0" role="button" aria-label="Карточка — нажмите, чтобы перевернуть">
+        <div class="fcard-inner">
+          <div class="fcard-face fcard-front"><span class="ftag">вопрос</span><div class="fq" id="fq"></div><span class="hint">нажмите, чтобы перевернуть</span></div>
+          <div class="fcard-face fcard-back"><span class="ftag">ответ</span><div class="fa" id="fa"></div><span class="hint">нажмите, чтобы вернуть</span></div>
+        </div>
+      </div>
+      <div class="deck-controls" id="deckControls">
+        <button class="btn ghost" id="againBtn">↺ Повторить позже</button>
+        <button class="btn primary" id="knowBtn">✓ Знаю</button>
+      </div>
+      <div class="deck-done" id="deckDone"></div>
+    </div>
+  </div>
+</section>
+
+<!-- ============ ЭКЗАМЕН ============ -->
+<section id="exam">
+  <div class="wrap">
+    <div class="sec-label">Финальная проверка</div>
+    <h2>Итоговый экзамен</h2>
+    <p class="sec-intro">Восемнадцать вопросов по всему курсу, последние шесть — <b>продвинутого уровня</b> (etypes, PAC, FAST, ротация krbtgt, S4U). Время засекается, но не ограничено. Проходной балл — 70%. После сдачи увидите разбор ошибок.</p>
+
+    <div id="examStart">
+      <div class="card" style="text-align:center;max-width:560px;margin:0 auto">
+        <h3 style="margin-bottom:8px">Готовы проверить себя?</h3>
+        <p style="color:var(--text-dim);font-size:14.5px;margin-bottom:18px">Отвечайте на все вопросы, затем нажмите «Завершить». Неотвеченные засчитываются как неверные.</p>
+        <button class="btn primary" id="examBegin">Начать экзамен</button>
+      </div>
+    </div>
+
+    <div id="examBody" style="display:none">
+      <div class="exam-bar">
+        <span class="exam-timer" id="examTimer">⏱ <b>00:00</b></span>
+        <span class="exam-prog" id="examProg"></span>
+        <button class="btn primary" id="examSubmit">Завершить экзамен</button>
+      </div>
+      <div id="examResult"></div>
+      <div class="quiz" id="examQuestions"></div>
+      <div style="text-align:center;margin-top:22px">
+        <button class="btn ghost" id="examRetake" style="display:none">Пересдать заново</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <span>Интерактивный курс по Kerberos · симметричная криптография, билеты, сеансовые ключи.</span>
+    <span>Открывайте симулятор и щёлкайте по шагам — так запоминается быстрее.</span>
+  </div>
+</footer>
+
+<script>
+(function () {
+  "use strict";
+  var reduceMotion = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+
+  /* ---------- ТЕМА ---------- */
+  var root = document.documentElement, themeBtn = document.getElementById("themeBtn");
+  var sunIcon = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+  var moonIcon = '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>';
+  function currentDark() {
+    var t = root.getAttribute("data-theme");
+    if (t) return t === "dark";
+    return window.matchMedia("(prefers-color-scheme: dark)").matches;
+  }
+  function syncIcon() { document.getElementById("themeIcon").innerHTML = currentDark() ? sunIcon : moonIcon; }
+  themeBtn.addEventListener("click", function () {
+    root.setAttribute("data-theme", currentDark() ? "light" : "dark");
+    syncIcon();
+  });
+  syncIcon();
+
+  /* ---------- КЛЮЧИ ---------- */
+  var lockSolid = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+  var KEYS = {
+    client:  { cls:"k-client",  code:"K_client",  name:"Ключ клиента",          desc:"Вычислен из пароля пользователя. Одна и та же копия есть у клиента и у KDC; по сети он не передаётся." },
+    sk1:     { cls:"k-sk1",     code:"SK1",        name:"Сеанс Клиент↔TGS",       desc:"Одноразовый ключ на время сеанса. Создаёт KDC и вручает клиенту в TGT-обмене; знают клиент и TGS." },
+    tgs:     { cls:"k-tgs",     code:"K_TGS",      name:"Ключ krbtgt",            desc:"Вычислен из пароля служебной учётки krbtgt. Им KDC запечатывает каждый TGT. Знает только KDC." },
+    sk2:     { cls:"k-sk2",     code:"SK2",        name:"Сеанс Клиент↔Сервис",    desc:"Одноразовый ключ на время сеанса. Создаёт TGS; в итоге знают клиент и сервис." },
+    service: { cls:"k-service", code:"K_service",  name:"Ключ сервиса",           desc:"Вычислен из пароля сервисной учётки. Одна и та же копия есть у сервиса и у KDC." }
+  };
+  function chip(id) {
+    var k = KEYS[id];
+    return '<span class="keychip '+k.cls+'">'+lockSolid+k.code+'</span>';
+  }
+
+  // легенда ключей
+  document.getElementById("keyLegend").innerHTML = Object.keys(KEYS).map(function (id) {
+    var k = KEYS[id];
+    return '<div class="item">'+chip(id)+'<div><b style="font-size:13.5px">'+k.name+'</b><div class="kdesc">'+k.desc+'</div></div></div>';
+  }).join("");
+
+  /* ---------- УЧАСТНИКИ ---------- */
+  var clientIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>';
+  var kdcIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 7.5h.01M7 16.5h.01"/></svg>';
+  var svcIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 9h16M9 20V9"/></svg>';
+  var ACTORS = [
+    { id:"client", name:"Клиент", role:"вы + пароль", icon:clientIcon, holds:["client","sk1","sk2"] },
+    { id:"kdc",    name:"KDC",    role:"AS · TGS",     icon:kdcIcon,    holds:["client","tgs","service"] },
+    { id:"svc",    name:"Сервис", role:"цель доступа", icon:svcIcon,    holds:["service","sk2"] }
+  ];
+  var actorsEl = document.getElementById("actors");
+  actorsEl.innerHTML = ACTORS.map(function (a) {
+    var chips = a.holds.map(function (id) {
+      return '<span class="keychip '+KEYS[id].cls+'" data-k="'+id+'">'+lockSolid+KEYS[id].code+'</span>';
+    }).join("");
+    return '<div class="actor" data-actor="'+a.id+'"><div class="ahead"><span class="adot">'+a.icon+
+      '</span><div><div class="aname">'+a.name+'</div><div class="arole">'+a.role+'</div></div></div>'+
+      '<div class="aholds"><span class="kh-label">знает ключи:</span>'+chips+'</div></div>';
+  }).join("");
+
+  /* ---------- ШАГИ ПРОТОКОЛА ---------- */
+  var STEPS = [
+    {
+      msg:"AS-REQ", from:"client", to:"kdc", dir:"Клиент → KDC (AS)",
+      title:"Прошу пропуск на въезд",
+      what:"Всё начинается с обращения к службе AS — по сути «я такой-то, дайте мне билет, по которому потом можно получать другие билеты». Проблема в том, что заявить «я такой-то» может кто угодно, поэтому клиент сразу прикладывает доказательство: берёт текущее время и шифрует его своим ключом — тем самым, что получился из пароля. По проводам уходит только этот зашифрованный обрывок. Ни пароль, ни ключ там не появляются — а у KDC, что удобно, есть точно такой же ключ, вычисленный независимо, так что расшифровать и проверить он сможет.",
+      hot:["client"], lit:{ client:["client"] },
+      fields:[
+        { label:"Имя клиента + имя TGS", plain:true, body:"Здесь всё открытым текстом: кто спрашивает и к какой службе. Плюс nonce — случайное число, чтобы к этому запросу нельзя было подсунуть чужой старый ответ, — и желаемый срок жизни билета." },
+        { label:"Метка времени", enc:"client", body:"Она же PA-ENC-TIMESTAMP: свежее время под ключом, который вычислен из пароля. Открыть это способен только тот, у кого тот же ключ, — то есть KDC. Открылось и время сошлось — значит, отправитель пароль знает, хотя нигде его не назвал." }
+      ],
+      result:"KDC получил запрос и заодно доказательство, что перед ним — тот, за кого себя выдаёт клиент."
+    },
+    {
+      msg:"AS-REP", from:"kdc", to:"client", dir:"KDC (AS) → Клиент",
+      title:"Вот твой TGT и первый сеансовый ключ",
+      what:"AS пробует расшифровать метку времени своей копией ключа клиента — получается, и время свежее, значит перед нами не самозванец. В ответ AS придумывает новый ключ <b>SK1</b> — только для этого сеанса — и отправляет клиенту две вещи: <b>TGT</b>, запертый ключом krbtgt (это личный ключ самого KDC, клиенту он недоступен), и отдельный конвертик, запертый уже ключом клиента.",
+      hot:["kdc","client"], lit:{ kdc:["client","tgs"], client:["client","sk1"] },
+      fields:[
+        { label:"TGT (билет)", enc:"tgs", body:"Внутри — имя клиента, срок годности и ключ SK1. Всё это заперто ключом krbtgt, поэтому вскрыть способен только KDC. Клиент попросту таскает этот билет с собой, даже не пытаясь заглянуть внутрь." },
+        { label:"Конверт для клиента", enc:"client", body:"А здесь — тот же SK1, имя TGS, срок и nonce. Этот конверт клиент как раз может открыть своим ключом (тем, что из пароля) и забрать оттуда SK1." }
+      ],
+      result:"У клиента на руках теперь TGT (заглянуть в него он не может) и ключ SK1. Пароль ему больше не понадобится — вплоть до истечения TGT."
+    },
+    {
+      msg:"TGS-REQ", from:"client", to:"kdc", dir:"Клиент → KDC (TGS)",
+      title:"Хочу билет вот на этот сервис",
+      what:"Теперь клиент идёт уже к другой части KDC — к TGS — и говорит: мне нужен билет вот на этот конкретный сервис. Предъявляет TGT в том виде, в каком получил (сам он его так и не открывал), и прикладывает свежий <b>аутентификатор</b> — метку времени под ключом SK1. Пароль тут снова не нужен: доказательством служит то, что SK1 у клиента действительно есть.",
+      hot:["client","kdc"], lit:{ client:["sk1"], kdc:["tgs","sk1"] },
+      fields:[
+        { label:"TGT", enc:"tgs", body:"Тот же самый билет из прошлого шага, в неизменном виде. Клиент его лишь переносит — расшифровывать будет KDC." },
+        { label:"Аутентификатор", enc:"sk1", body:"Имя клиента и свежая метка времени, запертые SK1. Показывает, что SK1 у клиента в руках прямо сейчас, а не был подсмотрен где-то раньше." },
+        { label:"Имя сервиса (SPN)", plain:true, body:"Указано открытым текстом — иначе KDC просто не поймёт, на какой билет выписывать." }
+      ],
+      result:"KDC видит запрос на билет к конкретному сервису — и уже держит в руках доказательство, что просит его именно тот, за кого он себя выдаёт."
+    },
+    {
+      msg:"TGS-REP", from:"kdc", to:"client", dir:"KDC (TGS) → Клиент",
+      title:"Держи билет на сервис",
+      what:"TGS вскрывает TGT своим ключом krbtgt и достаёт оттуда SK1 и личность клиента. Тем же SK1 проверяет аутентификатор — метка свежая, всё сходится. И вот здесь важный момент: <mark class=\"hl\">пароль ни разу не спросили заново</mark> — именно так и работает единый вход. TGS придумывает ещё один новый ключ, <b>SK2</b>, и выпускает билет на сервис.",
+      hot:["kdc","client"], lit:{ kdc:["tgs","service","sk1"], client:["sk1","sk2"] },
+      fields:[
+        { label:"ST — билет на сервис", enc:"service", body:"Имя клиента, срок годности и ключ SK2 — всё заперто ключом самого сервиса. Открыть это сможет только он." },
+        { label:"Конверт для клиента", enc:"sk1", body:"SK2, имя сервиса и срок, запертые SK1. Клиент открывает своим SK1 и достаёт SK2." }
+      ],
+      result:"Теперь у клиента есть ST (опять же непрозрачный) и общий с сервисом ключ SK2 — хотя сам сервис пока об этом даже не подозревает."
+    },
+    {
+      msg:"AP-REQ", from:"client", to:"svc", dir:"Клиент → Сервис",
+      title:"Впусти меня — вот билет",
+      what:"И наконец клиент стучится в сам сервис — KDC в этом шаге уже не участвует вообще. Предъявляет ST и свежий аутентификатор под ключом SK2. Сервис вскрывает ST собственным ключом, достаёт оттуда SK2 и имя клиента, а затем этим же SK2 проверяет аутентификатор — время должно быть свежим, иначе это похоже на повтор старого запроса.",
+      hot:["client","svc"], lit:{ client:["sk2"], svc:["service","sk2"] },
+      fields:[
+        { label:"ST", enc:"service", body:"Тот самый билет из прошлого шага. Сервис открывает его своим собственным ключом — идти за помощью к KDC ему уже не нужно." },
+        { label:"Аутентификатор", enc:"sk2", body:"Имя клиента и свежая метка под SK2. Сервис сверяет имя с тем, что написано в билете, и следит, чтобы метка не повторялась." }
+      ],
+      result:"Сервис убедился: клиент настоящий, а за него поручился сам KDC, выдав билет. Можно пускать."
+    },
+    {
+      msg:"AP-REP", from:"svc", to:"client", dir:"Сервис → Клиент (необязательно)",
+      title:"А вот и я настоящий",
+      what:"Этот шаг необязателен, но полезен: до сих пор личность доказывал только клиент, а сервис — ни разу. Чтобы закрыть и этот вопрос, сервис берёт метку времени из аутентификатора клиента и отправляет её обратно, зашифровав тем же SK2. Узнать SK2 мог только тот, кто сумел вскрыть ST собственным ключом, — то есть настоящий сервис, а не подделка.",
+      hot:["svc","client"], lit:{ svc:["sk2"], client:["sk2"] },
+      fields:[
+        { label:"Метка времени клиента", enc:"sk2", body:"Та же самая метка, что клиент отправлял в прошлом шаге, только теперь зашифрованная в обратную сторону. Раз сервис справился с этим ключом — значит, он тот, за кого себя выдаёт." }
+      ],
+      result:"На этом всё: обе стороны доказали, кто они. Дальше можно просто общаться, а трафик при желании шифровать тем же ключом SK2."
+    }
+  ];
+
+  /* ---------- ОТРИСОВКА КАРТЫ ПОТОКА ---------- */
+  var svg = document.getElementById("flowsvg");
+  var NODES = { client:{x:70,label:"Клиент"}, kdc:{x:300,label:"KDC"}, svc:{x:530,label:"Сервис"} };
+  var NY = 24, dotAnim = null;
+  function buildMap() {
+    var s = '';
+    // горизонтальная линия
+    s += '<line class="lane" x1="70" y1="'+NY+'" x2="530" y2="'+NY+'"/>';
+    // узлы
+    Object.keys(NODES).forEach(function (id) {
+      var n = NODES[id];
+      s += '<circle class="node" data-node="'+id+'" cx="'+n.x+'" cy="'+NY+'" r="9"/>';
+      s += '<text class="nlabel" x="'+n.x+'" y="'+(NY+30)+'" text-anchor="middle">'+n.label+'</text>';
+    });
+    // активная линия сообщения + стрелка + движущаяся точка
+    s += '<line class="msgline" id="msgline" x1="70" y1="'+NY+'" x2="70" y2="'+NY+'" style="opacity:0"/>';
+    s += '<polygon class="arrow" id="arrow" points="0,0 0,0 0,0" style="opacity:0"/>';
+    s += '<circle class="dot" id="dot" cx="70" cy="'+NY+'" r="5" style="opacity:0"/>';
+    svg.innerHTML = s;
+  }
+  buildMap();
+
+  function drawArrowHead(x, y, dir) {
+    var a = document.getElementById("arrow");
+    var w = 7;
+    var pts = dir > 0
+      ? [x, y, x - w, y - 5, x - w, y + 5]
+      : [x, y, x + w, y + 5, x + w, y - 5];
+    a.setAttribute("points", pts.join(" "));
+    a.style.opacity = "1";
+  }
+
+  function animateMessage(step) {
+    var from = NODES[step.from], to = NODES[step.to];
+    var line = document.getElementById("msgline"), dot = document.getElementById("dot");
+    var dir = to.x > from.x ? 1 : -1;
+    line.setAttribute("x1", from.x); line.setAttribute("x2", to.x);
+    line.setAttribute("y1", NY); line.setAttribute("y2", NY);
+    line.style.opacity = "1";
+    // стрелка чуть не доходя узла
+    drawArrowHead(to.x - dir * 11, NY, dir);
+    // подсветка узлов
+    svg.querySelectorAll(".node").forEach(function (n) {
+      n.classList.toggle("hot", n.getAttribute("data-node") === step.from || n.getAttribute("data-node") === step.to);
+    });
+    // движущаяся точка
+    if (dotAnim) { clearInterval(dotAnim); dotAnim = null; }
+    if (reduceMotion) { dot.style.opacity = "0"; return; }
+    dot.style.opacity = "1";
+    var t = 0;
+    dotAnim = setInterval(function () {
+      t += 0.045;
+      if (t >= 1) { t = 1; clearInterval(dotAnim); dotAnim = null; dot.style.opacity = "0"; }
+      dot.setAttribute("cx", from.x + (to.x - from.x) * t);
+    }, 16);
+  }
+
+  /* ---------- ОТРИСОВКА ШАГА ---------- */
+  var cur = 0;
+  var dpanel = document.getElementById("dpanel"), envelope = document.getElementById("envelope");
+  var dotsEl = document.getElementById("dots");
+  var prevBtn = document.getElementById("prevBtn"), nextBtn = document.getElementById("nextBtn");
+
+  dotsEl.innerHTML = STEPS.map(function (s, i) {
+    return '<button class="sdot" data-i="'+i+'" aria-label="Шаг '+(i+1)+': '+s.msg+'">'+(i+1)+'</button>';
+  }).join("");
+
+  function encClass(id) {
+    return { client:"by-client", sk1:"by-sk1", tgs:"by-tgs", sk2:"by-sk2", service:"by-service" }[id];
+  }
+
+  function render() {
+    var s = STEPS[cur];
+
+    // панель
+    dpanel.innerHTML =
+      '<div class="dhead"><span class="msgname">'+(cur+1)+' · '+s.msg+'</span><span class="dir">'+s.dir+'</span></div>'+
+      '<h3>'+s.title+'</h3>'+
+      '<div class="what">'+s.what+'</div>'+
+      '<div class="result">'+s.result+'</div>';
+
+    // конверт
+    var fields = s.fields.map(function (f) {
+      if (f.plain) {
+        return '<div class="field"><div class="frow"><span class="flabel">'+f.label+'</span><span class="plain">открытый текст</span></div><div class="fbody">'+f.body+'</div></div>';
+      }
+      var k = KEYS[f.enc];
+      return '<div class="field enc '+encClass(f.enc)+'"><div class="frow"><span class="flabel">'+f.label+'</span>'+chip(f.enc)+'</div><div class="fbody">'+f.body+'</div></div>';
+    }).join("");
+    envelope.innerHTML = '<div class="etitle">Что внутри сообщения '+s.msg+'</div>'+fields;
+
+    // подсветка участников
+    document.querySelectorAll(".actor").forEach(function (el) {
+      var id = el.getAttribute("data-actor");
+      el.classList.toggle("hot", s.hot.indexOf(id) !== -1);
+      var lit = (s.lit && s.lit[id]) || [];
+      el.querySelectorAll(".aholds .keychip").forEach(function (c) {
+        c.classList.toggle("lit", lit.indexOf(c.getAttribute("data-k")) !== -1);
+      });
+    });
+
+    // точки-шаги
+    dotsEl.querySelectorAll(".sdot").forEach(function (d, i) {
+      d.classList.toggle("active", i === cur);
+      d.classList.toggle("done", i < cur);
+    });
+
+    prevBtn.disabled = cur === 0;
+    nextBtn.disabled = cur === STEPS.length - 1;
+
+    animateMessage(s);
+  }
+
+  function go(i) { cur = Math.max(0, Math.min(STEPS.length - 1, i)); render(); }
+  prevBtn.addEventListener("click", function () { go(cur - 1); });
+  nextBtn.addEventListener("click", function () { go(cur + 1); });
+  dotsEl.addEventListener("click", function (e) {
+    var b = e.target.closest(".sdot"); if (b) go(+b.getAttribute("data-i"));
+  });
+  // стрелки клавиатуры, когда фокус в области симулятора
+  document.getElementById("sim").addEventListener("keydown", function (e) {
+    if (e.key === "ArrowRight") { go(cur + 1); }
+    if (e.key === "ArrowLeft") { go(cur - 1); }
+  });
+  render();
+
+  /* ---------- ТАБЛИЦА КЛЮЧЕЙ ---------- */
+  var Y = '<span class="yes">да</span>', N = '<span class="no">нет</span>';
+  var keyRows = [
+    { id:"client",  type:"долговременный", src:"из пароля пользователя",     c:Y, k:Y, s:N },
+    { id:"tgs",     type:"долговременный", src:"из пароля учётки krbtgt",     c:N, k:Y, s:N },
+    { id:"service", type:"долговременный", src:"из пароля сервисной учётки",  c:N, k:Y, s:Y },
+    { id:"sk1",     type:"сеансовый",      src:"генерирует AS на шаге 2",     c:Y, k:Y, s:N },
+    { id:"sk2",     type:"сеансовый",      src:"генерирует TGS на шаге 4",    c:Y, k:N, s:Y }
+  ];
+  document.getElementById("keyTable").innerHTML = keyRows.map(function (r) {
+    return '<tr><td>'+chip(r.id)+'<div class="note">'+KEYS[r.id].name+'</div></td><td>'+r.type+'</td><td class="note">'+r.src+'</td><td>'+r.c+'</td><td>'+r.k+'</td><td>'+r.s+'</td></tr>';
+  }).join("");
+
+  /* ---------- КВИЗ ---------- */
+  var QUIZ = [
+    {
+      q:"Почему пароль клиента не «утекает», хотя предаутентификация связана с ним?",
+      opts:[
+        "По сети идёт не пароль, а метка времени, зашифрованная выведенным из пароля ключом",
+        "Пароль отправляется, но по защищённому TLS-каналу",
+        "KDC хранит пароль и сверяет его при каждом запросе",
+        "Пароль передаётся только в первый раз, дальше — по памяти"
+      ],
+      a:0,
+      e:"Клиент шифрует свежую метку времени ключом, выведенным из пароля. У KDC есть своя копия того же ключа — он расшифровывает и проверяет. Ни пароль, ни сам ключ по сети не передаются."
+    },
+    {
+      q:"Каким ключом зашифрован TGT и кто способен его прочитать?",
+      opts:[
+        "Ключом клиента — читает клиент",
+        "Ключом krbtgt (K_TGS) — читает только KDC",
+        "Ключом сервиса — читает сервис",
+        "Сеансовым ключом SK1 — читают клиент и TGS"
+      ],
+      a:1,
+      e:"TGT запечатан ключом krbtgt. Клиент носит его как непрозрачный конверт и не может вскрыть — открыть способен только KDC."
+    },
+    {
+      q:"Зачем в каждом запросе нужен аутентификатор со свежей меткой времени?",
+      opts:[
+        "Чтобы синхронизировать часы клиента и сервера",
+        "Чтобы зашифровать сам билет",
+        "Чтобы доказать владение сеансовым ключом сейчас и не дать повторить старый запрос",
+        "Чтобы KDC знал, когда истекает пароль"
+      ],
+      a:2,
+      e:"Метка времени под сеансовым ключом доказывает, что отправитель владеет ключом прямо сейчас. Старый перехваченный запрос не пройдёт — метка окажется несвежей (replay-защита)."
+    },
+    {
+      q:"Почему на шаге TGS-REP (билет на сервис) KDC не спрашивает пароль заново?",
+      opts:[
+        "Пароль кэшируется в открытом виде на KDC",
+        "KDC доверяет TGT, который сам выдал, — это и есть единый вход (SSO)",
+        "Пароль передаётся скрытно внутри TGT",
+        "Это ошибка протокола, обычно пароль спрашивают"
+      ],
+      a:1,
+      e:"TGT доказывает, что клиент уже аутентифицировался. TGS проверяет билет и аутентификатор — и выдаёт сервисный билет без повторного ввода пароля. Отсюда SSO."
+    },
+    {
+      q:"Что делает возможной атаку Kerberoasting?",
+      opts:[
+        "Сервисный билет (ST) зашифрован ключом из пароля сервисной учётки — его можно перебрать офлайн",
+        "TGT можно расшифровать любым ключом",
+        "KDC отдаёт пароли сервисов по запросу",
+        "Аутентификатор содержит пароль клиента"
+      ],
+      a:0,
+      e:"Любой аутентифицированный пользователь может запросить ST. Он зашифрован ключом сервисной учётки, поэтому слабый пароль сервиса перебирается офлайн. Защита — длинные случайные пароли, gMSA, AES."
+    },
+    {
+      q:"Что такое «золотой билет» (Golden Ticket)?",
+      opts:[
+        "Билет с бессрочным сроком жизни, выданный KDC",
+        "Поддельный TGT, созданный при знании ключа krbtgt (K_TGS)",
+        "Билет, дающий доступ ко всем realm сразу по дизайну",
+        "Резервный билет, который KDC выдаёт админам"
+      ],
+      a:1,
+      e:"Зная ключ krbtgt, атакующий подделывает любой TGT с любыми правами — фактически становится кем угодно в домене. Поэтому ключ krbtgt защищают особо и периодически ротируют."
+    }
+  ];
+  var quizEl = document.getElementById("quiz"), scoreEl = document.getElementById("score");
+  var answered = 0, correct = 0;
+  quizEl.innerHTML = QUIZ.map(function (q, qi) {
+    var opts = q.opts.map(function (o, oi) {
+      return '<button class="opt" data-q="'+qi+'" data-o="'+oi+'"><span class="mark">'+String.fromCharCode(65+oi)+'</span><span>'+o+'</span></button>';
+    }).join("");
+    return '<div class="q"><div class="qn">Вопрос '+(qi+1)+'</div><div class="qq">'+q.q+'</div><div class="opts">'+opts+'</div><div class="explain" id="ex'+qi+'"></div></div>';
+  }).join("");
+  quizEl.addEventListener("click", function (e) {
+    var b = e.target.closest(".opt"); if (!b) return;
+    var qi = +b.getAttribute("data-q"), oi = +b.getAttribute("data-o");
+    var q = QUIZ[qi];
+    var container = b.closest(".q");
+    if (container.dataset.done) return;         // уже отвечено
+    container.dataset.done = "1";
+    answered++;
+    var right = oi === q.a;
+    if (right) correct++;
+    container.querySelectorAll(".opt").forEach(function (btn) {
+      var i = +btn.getAttribute("data-o");
+      btn.disabled = true;
+      if (i === q.a) btn.classList.add("correct");
+      else if (i === oi) btn.classList.add("wrong");
+    });
+    var ex = document.getElementById("ex"+qi);
+    ex.innerHTML = (right ? "<b style='color:var(--ok)'>Верно. </b>" : "<b style='color:var(--danger)'>Не совсем. </b>") + q.e;
+    ex.classList.add("show");
+    scoreEl.innerHTML = "Отвечено: <b>"+answered+"</b> из 6 · Верно: <b>"+correct+"</b>" + (answered===6 ? " — "+(correct===6?"идеально! 🏛️":"перечитайте объяснения выше") : "");
+  });
+
+  /* ---------- АТАКИ ---------- */
+  var skull = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="var(--danger)" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a7 7 0 0 0-4 12.7V18a2 2 0 0 0 2 2h4a2 2 0 0 0 2-2v-2.3A7 7 0 0 0 12 3Z"/><circle cx="9.5" cy="12" r="1"/><circle cx="14.5" cy="12" r="1"/></svg>';
+  var ATTACKS = [
+    { name:"Kerberoasting", weak:"service", desc:"Тут пользуются тем, что запросить сервисный билет может любой аутентифицированный пользователь — вообще любой. А билет этот зашифрован ключом, выведенным из пароля сервисной учётки. Так что атакующий просто забирает билет себе и дальше перебирает пароли уже офлайн, без спешки: угадал пароль → вычислил из него ключ → билет расшифровался, готово. К серверу-жертве при этом даже обращаться не нужно.", fix:"Длинные случайные пароли у сервисных учёток, групповые управляемые учётки (gMSA) с автосменой пароля, шифрование AES вместо устаревшего RC4, мониторинг всплесков запросов на сервисные билеты." },
+    { name:"AS-REP Roasting", weak:"client", desc:"Работает, только если у учётки зачем-то отключили предаутентификацию. Тогда атакующий шлёт AS-REQ вообще без пароля и всё равно получает в ответ AS-REP, часть которого зашифрована ключом из пароля жертвы. А дальше — тот же офлайн-перебор, что и в Kerberoasting.", fix:"Не отключать предаутентификацию без веской причины, требовать стойкие пароли, регулярно проверять, нет ли в домене учёток без pre-auth." },
+    { name:"Golden Ticket", weak:"tgs", desc:"Самая опасная атака в этом списке. Если ключ krbtgt утёк, атакующий может подделать буквально ЛЮБОЙ TGT — с любыми правами и на любой срок. KDC ведь просто доверяет собственной подписи, а раз подпись подделали, он поверит чему угодно. Это уже не взлом одного сервиса, а полный контроль над всем доменом.", fix:"Беречь krbtgt как зеницу ока, при малейшем подозрении на компрометацию менять его пароль — и обязательно дважды, использовать многоуровневую модель админ-доступа, следить за аномальными TGT." },
+    { name:"Silver Ticket", weak:"service", desc:"Похоже на золотой билет, только скромнее: зная ключ одного конкретного сервиса, атакующий подделывает билет прямо на него, вообще не обращаясь к KDC. За счёт этого атака заметно тише — TGS её попросту не видит.", fix:"Стойкие пароли сервисов, включённая проверка PAC, минимально необходимые права у сервисных учёток." },
+    { name:"Pass-the-Ticket", weak:"sk2", desc:"Здесь пароль вообще ни при чём. Атакующий вытаскивает уже готовый TGT или ST прямо из памяти процесса LSASS — там Windows и держит активные билеты — и просто переносит его на другую машину. Билет ворует и переиспользует, а не подбирает.", fix:"Credential Guard, который изолирует секреты в отдельном защищённом процессе, ограничение локальных прав администратора, короткое время жизни билетов, защита памяти LSASS." },
+    { name:"Overpass-the-Hash", weak:"client", desc:"Мост между кражей хэша и полноценным доступом по Kerberos: имея на руках хэш пароля (NTLM или уже готовый AES-ключ), сам пароль искать не нужно — атакующий сразу запрашивает валидный TGT.", fix:"Использовать только AES-шифрование, беречь хранимые хэши, регулярно менять пароли, изолировать привилегированные учётки." }
+  ];
+  document.getElementById("attacks-grid").innerHTML = ATTACKS.map(function (a) {
+    return '<div class="attack"><h3>'+skull+a.name+'</h3><div class="weak">Слабое звено: '+chip(a.weak)+'</div><p>'+a.desc+'</p><div class="fix"><b>Защита: </b>'+a.fix+'</div></div>';
+  }).join("");
+
+  /* ---------- ГЛОССАРИЙ ---------- */
+  var GLOSSARY = [
+    ["Principal", "Любой участник Kerberos: пользователь или сервис. Имеет уникальное имя внутри realm."],
+    ["Realm", "Область/зона Kerberos, обычно пишется заглавными. В Active Directory совпадает с доменом."],
+    ["KDC", "Key Distribution Center — доверенный центр. Содержит AS, TGS и базу секретов всех principal."],
+    ["AS", "Authentication Server — часть KDC, проверяет предаутентификацию и выдаёт TGT."],
+    ["TGS", "Ticket-Granting Server — часть KDC, обменивает TGT на билеты к конкретным сервисам."],
+    ["TGT", "Ticket-Granting Ticket — «билет на билеты». Зашифрован ключом krbtgt, основа единого входа."],
+    ["ST", "Service Ticket — билет на конкретный сервис, зашифрован ключом этого сервиса."],
+    ["SPN", "Service Principal Name — уникальное имя сервиса, по которому клиент просит билет."],
+    ["krbtgt", "Служебная учётка KDC. Из её пароля выведен ключ K_TGS, которым подписываются все TGT."],
+    ["Authenticator", "Свежая метка времени под сеансовым ключом. Доказывает владение ключом и защищает от повторов."],
+    ["Session key", "Одноразовый симметричный ключ на время разговора двух сторон (SK1, SK2)."],
+    ["Pre-authentication", "Зашифрованная выведенным из пароля ключом метка времени в AS-REQ — доказательство знания пароля."],
+    ["Keytab", "Файл с ключом сервиса, чтобы сервис мог расшифровывать свои билеты без ввода пароля."],
+    ["Долговременный ключ", "Ключ, выведенный из пароля (пользователя, сервиса или krbtgt). Живёт, пока не сменится пароль. Хранится и у владельца, и у KDC."],
+    ["string2key", "Односторонняя функция, превращающая пароль в ключ. Одинаковый пароль → одинаковый ключ, но обратно пароль не восстановить."],
+    ["nonce", "Одноразовое случайное число в запросе. Помогает убедиться, что ответ относится именно к этому запросу, а не подставлен от старого."],
+    ["Clock skew", "Допустимое расхождение часов (обычно ±5 минут). Из-за меток времени часы клиента, KDC и сервиса должны быть синхронизированы."],
+    ["SSO", "Single Sign-On, единый вход: пароль вводится один раз, дальше доступ к сервисам идёт по билетам."],
+    ["Referral-TGT", "Cross-realm TGT: билет к чужому KDC, зашифрованный межреалмовым ключом доверия. Пропуск в соседний домен."],
+    ["Inter-realm key", "Межреалмовый ключ доверия — общий секрет двух KDC. На нём строится доступ между доменами."],
+    ["Delegation", "Право сервиса действовать в других сервисах от имени пользователя. Бывает unconstrained, constrained (S4U) и RBCD."],
+    ["PKINIT", "Расширение Kerberos для входа по сертификату/смарт-карте: асимметричная криптография на первом шаге."],
+    ["Protected Users", "Группа AD, участники которой защищены от делегирования и слабых протоколов."],
+    ["etype", "Тип шифрования Kerberos: 23 = RC4-HMAC, 17/18 = AES128/256, 1/3 = DES. Клиент и KDC его согласуют."],
+    ["NT-хэш", "MD4 от пароля в UTF-16LE. Ключ для RC4-HMAC, без соли — быстро перебирается офлайн."],
+    ["PAC", "Privilege Attribute Certificate: SID и группы пользователя в билете (авторизация). Подписан ключами сервиса и krbtgt."],
+    ["FAST", "Flexible Authentication Secure Tunneling (armoring): защищённый канал для AS-обмена против офлайн-перебора."],
+    ["kvno", "Key Version Number — номер версии ключа. KDC хранит текущую и предыдущую версии krbtgt (отсюда двойная ротация)."],
+    ["S4U2Self / S4U2Proxy", "Механизмы constrained delegation: получить билет от имени пользователя и затем к разрешённому бэкенду."],
+    ["Bronze Bit", "CVE-2020-17049: обход ограничений делегирования через флаг forwardable в S4U2Proxy."],
+    ["Renew-till", "Абсолютный предел продления билета. Renewable-билет можно продлевать (renew) до этого момента, дальше — только новый вход."],
+    ["Postdated", "Билет с началом действия в будущем: до старта помечен флагом invalid и требует валидации в KDC."]
+  ];
+  document.getElementById("glossary").innerHTML = GLOSSARY.map(function (g) {
+    return '<dt>'+g[0]+'</dt><dd>'+g[1]+'</dd>';
+  }).join("");
+
+  /* ---------- ПРОГРЕСС + АКТИВНАЯ НАВИГАЦИЯ ---------- */
+  var progress = document.getElementById("progress");
+  window.addEventListener("scroll", function () {
+    var h = document.documentElement;
+    var sc = (h.scrollTop) / (h.scrollHeight - h.clientHeight);
+    progress.style.width = (sc * 100) + "%";
+  }, { passive: true });
+
+  var links = Array.prototype.slice.call(document.querySelectorAll(".nav-links a"));
+  var secToLink = {};
+  links.forEach(function (l) {
+    (l.getAttribute("data-sec") || l.getAttribute("href").slice(1)).split(/\s+/).forEach(function (id) { if (id) secToLink[id] = l; });
+  });
+  var obs = new IntersectionObserver(function (entries) {
+    entries.forEach(function (en) {
+      if (en.isIntersecting) {
+        var a = secToLink[en.target.id];
+        if (a) { links.forEach(function (l) { l.classList.remove("active"); }); a.classList.add("active"); }
+      }
+    });
+  }, { rootMargin: "-45% 0px -50% 0px" });
+  document.querySelectorAll("main section").forEach(function (s) { obs.observe(s); });
+})();
+</script>
+
+<script>
+/* ============ ТЕРМИНАЛ-ТРЕНАЖЁР (общий компонент LearningPlatform) ============ */
+(function () {
+  "use strict";
+  var esc = function (s) { return String(s).replace(/[&<>]/g, function (c) { return { "&":"&amp;", "<":"&lt;", ">":"&gt;" }[c]; }); };
+
+  function terminalMarkup(T) {
+    T = T || {};
+    return '<div class="lab"><div class="term">' +
+      '<div class="term-bar"><span class="dots"><i></i><i></i><i></i></span>' +
+      '<span class="term-title">' + esc(T.title || "sandbox") + '</span>' +
+      '<button class="term-reset" id="termReset">сброс</button></div>' +
+      '<div class="term-body" id="termBody" tabindex="0"></div>' +
+      '<div class="term-input"><span class="ps1" id="termPs1">' + esc(T.prompt || "$") + '</span>' +
+      '<input id="termInput" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Ввод команды"></div></div>' +
+      '<aside class="missions"><h3>Задания</h3><ul id="termMissions"></ul>' +
+      '<div class="mission-hint">' + (T.hint || "Наберите help, чтобы увидеть команды.") + '</div>' +
+      '<div class="mission-done" id="termDone">' + (T.doneText || "🎉 Все задания выполнены!") + '</div></aside></div>' +
+      '<div class="quickcmds" id="termQuick"></div>';
+  }
+
+  function initTerminal(T) {
+    var body = document.getElementById("termBody"); if (!T || !body) return;
+    var input = document.getElementById("termInput"), ps1 = document.getElementById("termPs1");
+    var missionsEl = document.getElementById("termMissions"), doneBox = document.getElementById("termDone"), quick = document.getElementById("termQuick");
+    var missions = T.missions || [], done = {}, history = [], hi = 0, pending = null, defPrompt = T.prompt || "$";
+    var cmds = {}; (T.commands || []).forEach(function (c) { cmds[c.name] = c; });
+
+    function put(text, cls) { var d = document.createElement("div"); if (cls) d.className = cls; d.textContent = text; body.appendChild(d); body.scrollTop = body.scrollHeight; }
+    function putHTML(h, cls) { var d = document.createElement("div"); if (cls) d.className = cls; d.innerHTML = h; body.appendChild(d); body.scrollTop = body.scrollHeight; }
+    function renderM() {
+      missionsEl.innerHTML = missions.map(function (m) { var d = done[m.id]; return '<li class="' + (d ? "done" : "") + '"><span class="box">' + (d ? "✓" : "") + '</span><span>' + m.text + '</span></li>'; }).join("");
+      doneBox.classList.toggle("show", missions.length > 0 && missions.every(function (m) { return done[m.id]; }));
+    }
+    renderM();
+
+    var ctx = {
+      cfg: T, state: {}, helpText: T.help || "",
+      print: put, printHTML: putHTML,
+      out: function (t) { put(t, "out"); },
+      note: function (t) { put("↳ " + t, "note"); },
+      muted: function (t) { put(t, "muted"); },
+      error: function (t) { put(t, "err"); },
+      clear: function () { body.innerHTML = ""; },
+      complete: function (id) { if (!done[id]) { done[id] = true; renderM(); } },
+      ask: function (label, opts, cb) { pending = { cb: cb, label: label, mask: !!(opts && opts.mask) }; ps1.textContent = label; if (pending.mask) input.type = "password"; }
+    };
+
+    function run(raw) {
+      putHTML('<span class="ps">' + esc(defPrompt) + '</span> ' + esc(raw), "cmd-echo");
+      var line = raw.trim(); if (line === "") return;
+      var tk = line.split(/\s+/), name = tk[0];
+      ctx.argsRaw = line.slice(name.length).trim();
+      var c = cmds[name];
+      if (c) { try { c.run(tk.slice(1), ctx); } catch (e) { ctx.error("ошибка: " + e.message); } }
+      else if (name === "clear") { ctx.clear(); }
+      else if (name === "help") { put(ctx.helpText, "out"); }
+      else { ctx.error((T.notFound || "команда не найдена: ") + name); }
+    }
+    function submit() {
+      var v = input.value; input.value = "";
+      if (pending) {
+        var p = pending; pending = null;
+        putHTML('<span class="ps">' + esc(p.label) + '</span> ' + (p.mask ? "•".repeat(Math.min(v.length, 8) || 4) : esc(v)), "muted");
+        ps1.textContent = defPrompt; input.type = "text";
+        try { p.cb(v, ctx); } catch (e) { ctx.error("ошибка: " + e.message); }
+        return;
+      }
+      if (v.trim() !== "") history.push(v); hi = history.length; run(v);
+    }
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { e.preventDefault(); submit(); }
+      else if (e.key === "ArrowUp") { if (history.length && hi > 0) { hi--; input.value = history[hi]; e.preventDefault(); } }
+      else if (e.key === "ArrowDown") { if (hi < history.length - 1) { hi++; input.value = history[hi]; } else { hi = history.length; input.value = ""; } e.preventDefault(); }
+    });
+    body.addEventListener("click", function () { input.focus(); });
+
+    if ((T.quick || []).length) quick.innerHTML = T.quick.map(function (q) { return '<button class="qc" data-cmd="' + esc(q) + '">' + esc(q) + '</button>'; }).join("");
+    quick.addEventListener("click", function (e) { var b = e.target.closest(".qc"); if (!b) return; input.focus(); run(b.getAttribute("data-cmd")); });
+    document.getElementById("termReset").addEventListener("click", function () {
+      body.innerHTML = ""; done = {}; pending = null; input.type = "text"; ps1.textContent = defPrompt;
+      Object.keys(ctx.state).forEach(function (k) { delete ctx.state[k]; });
+      renderM(); if (T.onReset) T.onReset(ctx); if (T.greeting) put(T.greeting, "muted");
+    });
+    if (T.greeting) put(T.greeting, "muted");
+  }
+
+  /* ==== ДАННЫЕ КУРСА: терминал Kerberos ==== */
+  var KRB_TERMINAL = {
+    title: "alice@workstation — sandbox krb5",
+    prompt: "$",
+    realm: "EXAMPLE.COM",
+    greeting: "Песочница Kerberos (эмуляция MIT krb5). Наберите help, чтобы начать, или жмите быстрые команды ниже.",
+    hint: "Пароль в песочнице любой. Стрелки ↑ / ↓ — история команд.",
+    doneText: "🏛️ Все задания выполнены! Вы прогнали полный цикл: вход → TGT → сервисный билет → очистка.",
+    notFound: "kerberos-lab: команда недоступна (наберите help): ",
+    help: [
+      "Команды песочницы (эмуляция MIT Kerberos на Linux):",
+      "  kinit [alice]     получить TGT (спросит пароль — подойдёт любой)",
+      "  klist             показать кэш билетов",
+      "  klist -e          + алгоритмы шифрования",
+      "  klist -f          + флаги билетов",
+      "  kvno <сервис>     получить сервисный билет (напр. host/server.example.com)",
+      "  kdestroy          очистить кэш билетов",
+      "  whoami            показать текущий principal",
+      "  clear             очистить экран",
+      "  help              эта справка"
+    ].join("\n"),
+    quick: ["kinit alice", "klist", "klist -e", "kvno host/server.example.com", "kdestroy", "help"],
+    missions: [
+      { id:"kinit",    text:"Получить TGT: <code>kinit alice</code>" },
+      { id:"klist",    text:"Посмотреть кэш: <code>klist</code>" },
+      { id:"klist-e",  text:"Узнать шифрование билетов: <code>klist -e</code>" },
+      { id:"kvno",     text:"Запросить билет на сервис: <code>kvno host/server.example.com</code>" },
+      { id:"klist2",   text:"Увидеть выросший кэш: снова <code>klist</code>" },
+      { id:"kdestroy", text:"Очистить кэш: <code>kdestroy</code>" }
+    ],
+    pad: function (n) { return (n < 10 ? "0" : "") + n; },
+    fmt: function (d) { var p = this.pad; return p(d.getMonth()+1)+"/"+p(d.getDate())+"/"+d.getFullYear()+"  "+p(d.getHours())+":"+p(d.getMinutes())+":"+p(d.getSeconds()); },
+    col: function (s) { s = String(s); while (s.length < 21) s += " "; return s; },
+    commands: [
+      { name: "kinit", run: function (args, ctx) {
+        var T = ctx.cfg, name = args[0] ? args[0].split("@")[0] : "alice";
+        ctx.ask("Password for " + name + "@" + T.realm + ":", { mask: true }, function (pw, ctx) {
+          var s = ctx.state;
+          s.auth = true; s.principal = name + "@" + T.realm; s.start = new Date();
+          s.tickets = [ { svc: "krbtgt/" + T.realm + "@" + T.realm, start: s.start, exp: new Date(s.start.getTime() + 10*3600*1000), flags: "FIA", et: "aes256-cts-hmac-sha1-96" } ];
+          ctx.note("AS-обмен (шаги 1–2): пароль превращён в ключ, KDC вернул TGT krbtgt/" + T.realm + ".");
+          ctx.complete("kinit");
+        });
+      } },
+      { name: "klist", run: function (args, ctx) {
+        var T = ctx.cfg, s = ctx.state;
+        if (!s.auth) { ctx.error("klist: No credentials cache found (filename: /tmp/krb5cc_1000)"); return; }
+        var eF = args.indexOf("-e") !== -1, fF = args.indexOf("-f") !== -1;
+        var lines = [ "Ticket cache: FILE:/tmp/krb5cc_1000", "Default principal: " + s.principal, "", T.col("Valid starting") + "  " + T.col("Expires") + "  Service principal" ];
+        s.tickets.forEach(function (t) {
+          lines.push(T.col(T.fmt(t.start)) + "  " + T.col(T.fmt(t.exp)) + "  " + t.svc);
+          if (fF) lines.push("        Flags: " + t.flags);
+          if (eF) lines.push("        Etype (skey, tkt): " + t.et + ", " + t.et);
+        });
+        ctx.out(lines.join("\n"));
+        ctx.complete("klist"); if (eF) ctx.complete("klist-e"); if (s.tickets.length > 1) ctx.complete("klist2");
+      } },
+      { name: "kvno", run: function (args, ctx) {
+        var T = ctx.cfg, s = ctx.state, spn = args[0];
+        if (!s.auth) { ctx.error("kvno: No credentials cache found (filename: /tmp/krb5cc_1000) while getting credentials"); return; }
+        if (!spn) { ctx.error("kvno: не указан сервис. Пример: kvno host/server.example.com"); return; }
+        var full = spn.indexOf("@") === -1 ? spn + "@" + T.realm : spn;
+        if (!s.tickets.some(function (t) { return t.svc === full; })) {
+          s.tickets.push({ svc: full, start: new Date(), exp: new Date(s.start.getTime() + 10*3600*1000), flags: "FA", et: "aes256-cts-hmac-sha1-96" });
+        }
+        ctx.out(full + ": kvno = 3");
+        ctx.note("TGS-обмен (шаги 3–4): по TGT получен сервисный билет для " + spn + " — кэш пополнен.");
+        ctx.complete("kvno");
+      } },
+      { name: "kdestroy", run: function (args, ctx) {
+        var s = ctx.state;
+        if (!s.auth) { ctx.error("kdestroy: No credentials cache found (filename: /tmp/krb5cc_1000)"); return; }
+        s.auth = false; s.principal = null; s.tickets = []; s.start = null;
+        ctx.note("Кэш билетов уничтожен. Для нового доступа снова нужен kinit.");
+        ctx.complete("kdestroy");
+      } },
+      { name: "whoami", run: function (args, ctx) { ctx.out(ctx.state.auth ? ctx.state.principal : "не аутентифицирован — сначала kinit"); } },
+      { name: "kpasswd", run: function (args, ctx) { ctx.note("Смена пароля в песочнице не эмулируется — на реальной системе это отдельный обмен с KDC (см. справочник ниже)."); } },
+      { name: "kadmin", run: function (args, ctx) { ctx.note("Инструмент 'kadmin' есть в справочнике ниже, но в песочнице не эмулируется."); } },
+      { name: "ktutil", run: function (args, ctx) { ctx.note("Инструмент 'ktutil' есть в справочнике ниже, но в песочнице не эмулируется."); } },
+      { name: "help", run: function (args, ctx) { ctx.out(ctx.helpText); } },
+      { name: "clear", run: function (args, ctx) { ctx.clear(); } }
+    ]
+  };
+
+  var mount = document.getElementById("labMount");
+  if (mount) { mount.innerHTML = terminalMarkup(KRB_TERMINAL); initTerminal(KRB_TERMINAL); }
+})();
+</script>
+
+<script>
+/* ============ ФЛЕШ-КАРТОЧКИ ============ */
+(function () {
+  "use strict";
+  var DECK = [
+    { q:"Что такое KDC?", a:"Key Distribution Center — доверенный сервер, хранящий долговременный ключ каждого. Содержит службы AS и TGS." },
+    { q:"Чем AS отличается от TGS?", a:"AS выдаёт TGT после проверки пароля. TGS обменивает TGT на билеты к конкретным сервисам, пароль уже не спрашивая." },
+    { q:"Что такое TGT?", a:"Ticket-Granting Ticket — «билет на билеты». Зашифрован ключом krbtgt, основа единого входа." },
+    { q:"Каким ключом зашифрован TGT? Кто его читает?", a:"Ключом krbtgt (K_TGS). Открыть может только KDC; клиент носит его как непрозрачный конверт." },
+    { q:"Что такое ST?", a:"Service Ticket — билет на конкретный сервис, зашифрован ключом этого сервиса." },
+    { q:"Что значит «ключ выведен из пароля»?", a:"Односторонняя функция string2key превращает пароль в ключ. Клиент и KDC вычисляют его отдельно; по сети он не передаётся." },
+    { q:"Почему пароль не уходит по сети даже в первом запросе?", a:"В сеть идёт метка времени, зашифрованная выведенным из пароля ключом, — ни сам пароль, ни ключ." },
+    { q:"Что такое SK1?", a:"Сеансовый ключ клиент↔TGS. Создаёт AS и вручает клиенту в AS-REP." },
+    { q:"Что такое SK2?", a:"Сеансовый ключ клиент↔сервис. Создаёт TGS; доставляется клиенту и внутри ST — сервису." },
+    { q:"Зачем нужен аутентификатор?", a:"Свежая метка времени под сеансовым ключом. Доказывает владение ключом сейчас и защищает от повторов (replay)." },
+    { q:"Назовите 6 сообщений протокола по порядку.", a:"AS-REQ, AS-REP, TGS-REQ, TGS-REP, AP-REQ, AP-REP." },
+    { q:"Что даёт AP-REP?", a:"Взаимную аутентификацию: сервис доказывает, что он настоящий, вернув метку времени под SK2 (значит, он смог открыть ST)." },
+    { q:"Что такое realm?", a:"Административная область Kerberos. В Active Directory совпадает с доменом, пишется заглавными." },
+    { q:"Kerberoasting — в чём суть?", a:"Запросить ST (он зашифрован ключом из пароля сервисной учётки) и перебрать пароль офлайн." },
+    { q:"Golden Ticket — в чём суть?", a:"Зная ключ krbtgt, подделать любой TGT с любыми правами. Полный контроль над доменом." },
+    { q:"Silver Ticket — в чём суть?", a:"Зная ключ конкретного сервиса, подделать ST напрямую, минуя KDC. Тихо, без трафика к TGS." },
+    { q:"AS-REP Roasting — в чём суть?", a:"При отключённой предаутентификации получить AS-REP (часть под ключом жертвы) и перебрать пароль офлайн." },
+    { q:"Cross-realm: что делят два KDC?", a:"Межреалмовый ключ доверия — общий секрет двух KDC, на нём шифруется referral-TGT." },
+    { q:"Unconstrained vs constrained delegation?", a:"Unconstrained — сервер может выдавать себя за вас перед кем угодно (опасно). Constrained — только перед заданным списком сервисов." },
+    { q:"Почему для Kerberos важна синхронизация времени?", a:"Протокол опирается на метки времени (окно ±5 минут). Рассинхрон часов ломает аутентификацию." },
+    { q:"Что такое etype 23 (RC4-HMAC)?", a:"Ключ = NT-хэш = MD4(пароль), без соли и итераций. Быстро перебирается офлайн — устаревший тип." },
+    { q:"Чем AES-ключ Kerberos лучше NT-хэша?", a:"Выводится PBKDF2 с солью (realm+principal) и 4096 итерациями — перебор кратно дороже." },
+    { q:"Что такое PAC?", a:"Privilege Attribute Certificate: SID и группы пользователя внутри билета. Так KDC передаёт авторизацию. Подписан ключами сервиса и krbtgt." },
+    { q:"Что делает Kerberos FAST / armoring?", a:"Заворачивает AS-обмен в защищённый канал, лишая офлайн-перебор материала — прямой удар по AS-REP roasting." },
+    { q:"Почему krbtgt меняют дважды?", a:"KDC хранит текущий (N) и предыдущий (N-1) ключи. Одна смена оставляет старый валидным для Golden Ticket; две — вычищают оба." },
+    { q:"Что такое S4U2Self?", a:"Протокольный переход: сервис получает билет от имени пользователя, не аутентифицировавшегося по Kerberos." }
+  ];
+
+  var fcard = document.getElementById("fcard");
+  var fq = document.getElementById("fq"), fa = document.getElementById("fa");
+  var meta = document.getElementById("deckMeta"), controls = document.getElementById("deckControls"), doneEl = document.getElementById("deckDone");
+  if (!fcard) return;
+
+  var total = DECK.length, queue = [], known = 0;
+  function reset() { queue = DECK.map(function (_, i) { return i; }); known = 0; }
+  reset();
+
+  function render() {
+    if (queue.length === 0) { finish(); return; }
+    var c = DECK[queue[0]];
+    fq.textContent = c.q; fa.textContent = c.a;
+    fcard.classList.remove("flipped");
+    meta.innerHTML = "Осталось: <b>" + queue.length + "</b> из " + total + " · выучено: <b>" + known + "</b>";
+  }
+  function finish() {
+    fcard.style.display = "none"; controls.style.display = "none";
+    meta.style.display = "none";
+    doneEl.classList.add("show");
+    doneEl.innerHTML = '<div class="big">🏛️ Колода пройдена!</div><p style="color:var(--text-dim);font-size:14.5px;margin-bottom:16px">Вы прогнали все ' + total + ' карточек. Отличная тренировка памяти.</p><button class="btn primary" id="deckRestart">Пройти заново</button>';
+    document.getElementById("deckRestart").addEventListener("click", function () {
+      reset(); fcard.style.display = ""; controls.style.display = ""; meta.style.display = "";
+      doneEl.classList.remove("show"); render();
+    });
+  }
+
+  fcard.addEventListener("click", function () { fcard.classList.toggle("flipped"); });
+  fcard.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fcard.classList.toggle("flipped"); } });
+  document.getElementById("knowBtn").addEventListener("click", function () { queue.shift(); known++; render(); });
+  document.getElementById("againBtn").addEventListener("click", function () { if (queue.length > 1) queue.push(queue.shift()); render(); });
+  render();
+})();
+
+/* ============ ИТОГОВЫЙ ЭКЗАМЕН ============ */
+(function () {
+  "use strict";
+  var EXAM = [
+    { q:"Сколько сообщений в полном обмене Kerberos, включая взаимную аутентификацию?", o:["3","4","6","8"], a:2, e:"Шесть: AS-REQ, AS-REP, TGS-REQ, TGS-REP, AP-REQ, AP-REP." },
+    { q:"Каким ключом зашифрован сервисный билет (ST)?", o:["Ключом клиента","Ключом сервиса","Ключом krbtgt","Сеансовым ключом SK1"], a:1, e:"ST зашифрован ключом сервиса — открыть его может только сам сервис." },
+    { q:"Что доказывает предаутентификация в AS-REQ?", o:["Что клиент онлайн","Знание пароля без его передачи","Что часы синхронизированы","Наличие у клиента TGT"], a:1, e:"Клиент шифрует метку времени ключом из пароля; расшифровать её может только KDC с той же копией ключа." },
+    { q:"Какая служба KDC выдаёт TGT?", o:["TGS","AS","Сам сервис","krbtgt напрямую"], a:1, e:"AS (Authentication Server) проверяет предаутентификацию и выдаёт TGT." },
+    { q:"Часы клиента ушли на 20 минут вперёд. Что будет?", o:["Ничего, время не важно","Аутентификация не пройдёт — метка вне окна","KDC сам подстроит часы","Пароль будет отвергнут"], a:1, e:"Метки времени должны попадать в окно (обычно ±5 минут). Рассинхрон ломает аутентификацию — потому в доменах критичен NTP." },
+    { q:"Для чего служит ключ SK2?", o:["Шифрует TGT","Сеансовый ключ между клиентом и сервисом","Долговременный ключ сервиса","Ключ krbtgt"], a:1, e:"SK2 — сеансовый ключ клиент↔сервис, его создаёт TGS и доставляет обеим сторонам." },
+    { q:"Компрометация какого ключа даёт «золотой билет»?", o:["Ключа сервиса","Ключа krbtgt (K_TGS)","Ключа клиента","SK1"], a:1, e:"Зная ключ krbtgt, можно подделать любой TGT — это полный контроль над доменом." },
+    { q:"Что делят два KDC при cross-realm доверии?", o:["Общую базу паролей","Межреалмовый ключ доверия","Один и тот же krbtgt","Список пользователей"], a:1, e:"Два KDC заранее делят межреалмовый ключ — на нём шифруется referral-TGT в чужой домен." },
+    { q:"Чем опасно unconstrained delegation?", o:["Замедляет вход","Сервер может выдавать себя за пользователя перед любым сервисом","Отключает шифрование","Удаляет TGT"], a:1, e:"Сервер с таким правом копит TGT посетителей и может олицетворять их где угодно — классический вектор эскалации в AD." },
+    { q:"Почему TGS не спрашивает пароль повторно?", o:["Пароль кэшируется открытым","Он доверяет TGT — это и есть SSO","Пароль внутри TGT","Так и должно, обычно спрашивает"], a:1, e:"TGT доказывает, что клиент уже аутентифицировался. TGS проверяет билет и аутентификатор — и выдаёт сервисный билет. Это единый вход." },
+    { q:"Что делает аутентификацию Kerberos «взаимной»?", o:["Клиент вводит пароль дважды","Сервис тоже доказывает подлинность через AP-REP","KDC подписывает каждый пакет","Используются два пароля"], a:1, e:"В AP-REP сервис возвращает метку времени под SK2 — доказывая, что смог открыть ST, то есть он настоящий." },
+    { q:"Kerberoasting возможен, потому что…", o:["KDC отдаёт пароли","ST зашифрован ключом из пароля сервиса и перебирается офлайн","TGT можно открыть любым ключом","Аутентификатор содержит пароль"], a:1, e:"Любой пользователь может запросить ST; он зашифрован ключом из пароля сервисной учётки, поэтому слабый пароль перебирается офлайн." },
+    { q:"Какой etype соответствует NT-хэшу и почему он опаснее AES?", o:["AES256 — он длиннее","RC4-HMAC (23): MD4 без соли и итераций → быстрый офлайн-перебор","DES — он устарел","AES128 — меньше раундов"], a:1, hard:true, e:"RC4-HMAC (etype 23) использует NT-хэш = MD4(пароль): ни соли, ни итераций, поэтому перебор кратно быстрее AES." },
+    { q:"Чем AES-ключ Kerberos защищён лучше NT-хэша?", o:["Он короче","Солью (realm+principal) и 4096 итерациями PBKDF2","Он не хранится на KDC","Он асимметричный"], a:1, hard:true, e:"AES-ключ выводится PBKDF2-HMAC-SHA1 с солью из realm+principal и 4096 итерациями — это кратно удорожает перебор по сравнению с несолёным NT-хэшем." },
+    { q:"Почему после компрометации krbtgt его пароль меняют дважды?", o:["Так требует лицензия","KDC хранит текущий и предыдущий ключи; одна смена оставляет старый валидным","Чтобы сбросить все пароли пользователей","Дважды — это ошибка, достаточно одного раза"], a:1, hard:true, e:"KDC держит версии N и N-1. Одна смена оставляет N-1 валидным — украденный ключ ещё годится для Golden Ticket. Две смены с паузой вычищают и N-1." },
+    { q:"Что содержит PAC и чем он подписан?", o:["Пароль пользователя, подписан клиентом","SID и группы пользователя, подписан ключами сервиса и krbtgt","Только имя, без подписи","Сеансовый ключ, подписан AS"], a:1, hard:true, e:"PAC несёт авторизацию — SID и членство в группах — и подписан ключом сервиса и ключом krbtgt, чтобы клиент не подменил свои права." },
+    { q:"Что даёт Kerberos FAST (armoring)?", o:["Ускоряет вход","Заворачивает AS-обмен в защищённый канал, лишая офлайн-перебор материала","Отключает метки времени","Шифрует TGT дважды"], a:1, hard:true, e:"FAST/armoring армирует AS-обмен билетом машины: перехваченный трафик больше не даёт материала для перебора — прямой удар по AS-REP roasting." },
+    { q:"Что такое S4U2Self (протокольный переход)?", o:["Смена пароля пользователем","Сервис получает билет от имени пользователя, не аутентифицировавшегося по Kerberos","Обмен между двумя KDC","Продление TGT"], a:1, hard:true, e:"S4U2Self (protocol transition) даёт сервису билет «на себя» от имени пользователя, вошедшего не по Kerberos. Право TRUSTED_TO_AUTH_FOR_DELEGATION делает такую учётку целью атак." }
+  ];
+
+  var startEl = document.getElementById("examStart"), bodyEl = document.getElementById("examBody");
+  var qEl = document.getElementById("examQuestions"), resEl = document.getElementById("examResult");
+  var timerEl = document.getElementById("examTimer"), progEl = document.getElementById("examProg");
+  var submitBtn = document.getElementById("examSubmit"), retakeBtn = document.getElementById("examRetake"), beginBtn = document.getElementById("examBegin");
+  if (!beginBtn) return;
+
+  var answers = {}, graded = false, t0 = 0, timer = null;
+
+  function pad(n) { return (n < 10 ? "0" : "") + n; }
+  function fmtTime(sec) { return pad(Math.floor(sec / 60)) + ":" + pad(sec % 60); }
+  function updateProg() {
+    var n = Object.keys(answers).length;
+    progEl.textContent = "отвечено " + n + " / " + EXAM.length;
+  }
+
+  function renderQuestions() {
+    qEl.innerHTML = EXAM.map(function (q, qi) {
+      var opts = q.o.map(function (o, oi) {
+        return '<button class="exopt" data-q="' + qi + '" data-o="' + oi + '"><span class="mk">' + String.fromCharCode(65 + oi) + '</span><span>' + o + '</span></button>';
+      }).join("");
+      var tag = q.hard ? ' <span class="pill danger" style="margin-left:8px">продвинутый</span>' : '';
+      return '<div class="exq" data-qi="' + qi + '"><div class="exn">Вопрос ' + (qi + 1) + ' из ' + EXAM.length + tag + '</div><div class="qq">' + q.q + '</div><div class="exopts">' + opts + '</div><div class="exex" id="exex' + qi + '"></div></div>';
+    }).join("");
+  }
+
+  qEl.addEventListener("click", function (e) {
+    if (graded) return;
+    var b = e.target.closest(".exopt"); if (!b) return;
+    var qi = +b.getAttribute("data-q"), oi = +b.getAttribute("data-o");
+    answers[qi] = oi;
+    var box = b.closest(".exq");
+    box.querySelectorAll(".exopt").forEach(function (o) { o.classList.toggle("sel", +o.getAttribute("data-o") === oi); });
+    updateProg();
+  });
+
+  function begin() {
+    answers = {}; graded = false;
+    startEl.style.display = "none"; bodyEl.style.display = "";
+    resEl.innerHTML = ""; retakeBtn.style.display = "none";
+    submitBtn.disabled = false;
+    renderQuestions(); updateProg();
+    t0 = Date.now();
+    timer = setInterval(function () { timerEl.innerHTML = "⏱ <b>" + fmtTime(Math.floor((Date.now() - t0) / 1000)) + "</b>"; }, 1000);
+    bodyEl.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
+  function grade() {
+    if (graded) return;
+    graded = true;
+    if (timer) { clearInterval(timer); timer = null; }
+    var elapsed = Math.floor((Date.now() - t0) / 1000);
+    var correct = 0;
+    EXAM.forEach(function (q, qi) {
+      var pick = answers[qi];
+      if (pick === q.a) correct++;
+      var box = qEl.querySelector('.exq[data-qi="' + qi + '"]');
+      box.querySelectorAll(".exopt").forEach(function (o) {
+        var oi = +o.getAttribute("data-o");
+        o.disabled = true; o.classList.remove("sel");
+        if (oi === q.a) o.classList.add("correct");
+        else if (oi === pick) o.classList.add("wrongpick");
+      });
+      if (pick !== q.a) {
+        var ex = document.getElementById("exex" + qi);
+        ex.innerHTML = (pick === undefined ? "<b style='color:var(--danger)'>Без ответа. </b>" : "<b style='color:var(--danger)'>Неверно. </b>") + q.e;
+        ex.classList.add("show");
+      }
+    });
+    var pct = Math.round(correct / EXAM.length * 100);
+    var pass = pct >= 70;
+    resEl.innerHTML =
+      '<div class="exam-result ' + (pass ? "pass" : "fail") + '">' +
+        '<div class="big">' + pct + '%</div>' +
+        '<div class="badge">' + (pass ? "✓ Сдано" : "✗ Не сдано") + '</div>' +
+        '<div class="sub">Верно ' + correct + ' из ' + EXAM.length + ' · время ' + fmtTime(elapsed) + (pass ? ' · вы отлично разобрались в Kerberos!' : ' · нужно 70% — перечитайте разбор ниже и пересдайте.') + '</div>' +
+      '</div>';
+    submitBtn.disabled = true;
+    retakeBtn.style.display = "";
+    resEl.scrollIntoView({ behavior: "smooth", block: "center" });
+  }
+
+  beginBtn.addEventListener("click", begin);
+  submitBtn.addEventListener("click", grade);
+  retakeBtn.addEventListener("click", function () {
+    startEl.style.display = ""; bodyEl.style.display = "none";
+    startEl.scrollIntoView({ behavior: "smooth", block: "center" });
+  });
+})();
+
+/* ============ ЖИЗНЕННЫЙ ЦИКЛ БИЛЕТА ============ */
+(function () {
+  "use strict";
+  var LIFE = 10, RENEW = 168, POST = 20; // часы: время жизни, renew-till (7д), сдвиг postdate
+  var track = document.getElementById("tlTrack");
+  if (!track) return;
+  var elValid = document.getElementById("tlValid"), elRenew = document.getElementById("tlRenew"),
+      elInvalid = document.getElementById("tlInvalid"), elNow = document.getElementById("tlNow"),
+      ticks = document.getElementById("tlTicks"), slider = document.getElementById("tlSlider"),
+      statusEl = document.getElementById("tlStatus"), metaEl = document.getElementById("tlMeta"),
+      renewBtn = document.getElementById("tlRenewBtn"), resetBtn = document.getElementById("tlResetBtn"),
+      postChk = document.getElementById("tlPostdate");
+
+  var st = {};
+  function pct(x) { return Math.max(0, Math.min(100, x / RENEW * 100)); }
+  function fmtH(h) { h = Math.round(h); if (h <= 0) return "0 ч"; if (h < 24) return h + " ч"; var d = Math.floor(h / 24), r = h % 24; return d + " д" + (r ? " " + r + " ч" : ""); }
+
+  function reset() {
+    st.postdated = postChk.checked;
+    st.start = st.postdated ? POST : 0;
+    st.end = st.start + LIFE;
+    st.renewTill = RENEW;
+    st.now = st.start;
+    slider.value = st.now;
+    render();
+  }
+
+  function render() {
+    elValid.style.left = pct(st.start) + "%";
+    elValid.style.width = (pct(st.end) - pct(st.start)) + "%";
+    elRenew.style.left = pct(st.end) + "%";
+    elRenew.style.width = (100 - pct(st.end)) + "%";
+    if (st.postdated) { elInvalid.style.display = "block"; elInvalid.style.left = "0%"; elInvalid.style.width = pct(st.start) + "%"; }
+    else { elInvalid.style.display = "none"; }
+    elNow.style.left = pct(st.now) + "%";
+
+    ticks.innerHTML = "";
+    var marks = st.postdated ? [{ x: 0, l: "выдан" }, { x: st.start, l: "старт" }] : [{ x: 0, l: "старт" }];
+    marks.push({ x: st.end, l: "истекает" });
+    marks.push({ x: RENEW, l: "renew-till" });
+    marks.forEach(function (m) {
+      var s = document.createElement("span");
+      s.className = "tl-tick"; s.style.left = pct(m.x) + "%"; s.textContent = m.l;
+      ticks.appendChild(s);
+    });
+
+    var cls, msg;
+    if (st.postdated && st.now < st.start) {
+      cls = "bad"; msg = "<b>Ещё не действует.</b> Постдатированный билет (флаг <b>invalid</b>) начнёт работать через " + fmtH(st.start - st.now) + " и потребует валидации в KDC.";
+    } else if (st.now <= st.end) {
+      cls = "ok"; msg = "<b>✓ Действителен.</b> AP-REQ проходит. До истечения: <b>" + fmtH(st.end - st.now) + "</b>. Продлевать можно ещё " + fmtH(st.renewTill - st.now) + ".";
+    } else if (st.now <= st.renewTill) {
+      cls = "warn"; msg = "<b>⚠ Срок действия истёк</b>, но билет продляемый. Нажмите «Продлить» — и он снова станет валидным. До предела renew-till: <b>" + fmtH(st.renewTill - st.now) + "</b>.";
+    } else {
+      cls = "bad"; msg = "<b>✗ Renew-till достигнут.</b> Продлевать больше нельзя — нужен новый вход (kinit).";
+    }
+    statusEl.className = "tl-status " + cls; statusEl.innerHTML = msg;
+    metaEl.innerHTML = "Сейчас: <b>" + fmtH(st.now) + "</b> · Время жизни: <b>" + LIFE + " ч</b> · Renew-till: <b>7 дней</b>";
+    renewBtn.disabled = !(st.now >= st.start && st.now <= st.renewTill);
+  }
+
+  slider.addEventListener("input", function () { st.now = +slider.value; render(); });
+  renewBtn.addEventListener("click", function () {
+    if (st.now < st.start || st.now > st.renewTill) return;
+    st.end = Math.min(st.now + LIFE, st.renewTill);
+    render();
+  });
+  resetBtn.addEventListener("click", reset);
+  postChk.addEventListener("change", reset);
+  reset();
+})();
+</script>
+
+</body>
+</html>

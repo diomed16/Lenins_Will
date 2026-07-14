@@ -1,0 +1,1088 @@
+﻿<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>LearningPlatform — шаблон курса</title>
+</head>
+<body>
+<style>
+  :root {
+    --bg:#eef0f3; --bg-2:#f8f9fb; --bg-3:#ffffff; --border:#d5dae2; --border-2:#c3cad4;
+    --text:#18202c; --text-dim:#5a6675; --text-faint:#8a94a2;
+    --accent:#9a6a12; --accent-2:#b98526; --accent-soft:rgba(154,106,18,.10);
+    --danger:#b3402a; --danger-soft:rgba(179,64,42,.10); --ok:#2f7d46;
+    --tone-a:#9a6b12; --tone-a-bg:rgba(154,107,18,.13);
+    --tone-b:#157f73; --tone-b-bg:rgba(21,127,115,.13);
+    --tone-c:#5f49b8; --tone-c-bg:rgba(95,73,184,.13);
+    --tone-d:#3f8c31; --tone-d-bg:rgba(63,140,49,.13);
+    --tone-e:#c0522f; --tone-e-bg:rgba(192,82,47,.13);
+    --serif:"Iowan Old Style","Palatino Linotype",Palatino,"Book Antiqua",Georgia,"Times New Roman",serif;
+    --sans:system-ui,-apple-system,"Segoe UI",Roboto,"Helvetica Neue",Arial,sans-serif;
+    --mono:"SFMono-Regular",ui-monospace,"Cascadia Code",Consolas,"Liberation Mono",Menlo,monospace;
+    --r:12px; --shadow:0 1px 2px rgba(20,28,40,.06),0 8px 24px rgba(20,28,40,.06); --maxw:1160px;
+  }
+  @media (prefers-color-scheme: dark) { :root {
+    --bg:#0e1520; --bg-2:#16202e; --bg-3:#1c2836; --border:#2a3646; --border-2:#38485c;
+    --text:#e7ecf3; --text-dim:#9fabbd; --text-faint:#6e7c8f;
+    --accent:#e0b25a; --accent-2:#d4a24a; --accent-soft:rgba(224,178,90,.12);
+    --danger:#ec7156; --danger-soft:rgba(236,113,86,.13); --ok:#6ec27a;
+    --tone-a:#e6b957; --tone-a-bg:rgba(230,185,87,.14);
+    --tone-b:#4fc2b4; --tone-b-bg:rgba(79,194,180,.14);
+    --tone-c:#a591ec; --tone-c-bg:rgba(165,145,236,.15);
+    --tone-d:#79cf68; --tone-d-bg:rgba(121,207,104,.14);
+    --tone-e:#ec8a6b; --tone-e-bg:rgba(236,138,107,.15);
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+  } }
+  :root[data-theme="dark"] {
+    --bg:#0e1520; --bg-2:#16202e; --bg-3:#1c2836; --border:#2a3646; --border-2:#38485c;
+    --text:#e7ecf3; --text-dim:#9fabbd; --text-faint:#6e7c8f;
+    --accent:#e0b25a; --accent-2:#d4a24a; --accent-soft:rgba(224,178,90,.12);
+    --danger:#ec7156; --danger-soft:rgba(236,113,86,.13); --ok:#6ec27a;
+    --tone-a:#e6b957; --tone-a-bg:rgba(230,185,87,.14); --tone-b:#4fc2b4; --tone-b-bg:rgba(79,194,180,.14);
+    --tone-c:#a591ec; --tone-c-bg:rgba(165,145,236,.15); --tone-d:#79cf68; --tone-d-bg:rgba(121,207,104,.14);
+    --tone-e:#ec8a6b; --tone-e-bg:rgba(236,138,107,.15);
+    --shadow:0 1px 2px rgba(0,0,0,.3),0 10px 30px rgba(0,0,0,.35);
+  }
+  :root[data-theme="light"] {
+    --bg:#eef0f3; --bg-2:#f8f9fb; --bg-3:#ffffff; --border:#d5dae2; --border-2:#c3cad4;
+    --text:#18202c; --text-dim:#5a6675; --text-faint:#8a94a2;
+    --accent:#9a6a12; --accent-2:#b98526; --accent-soft:rgba(154,106,18,.10);
+    --danger:#b3402a; --danger-soft:rgba(179,64,42,.10); --ok:#2f7d46;
+    --tone-a:#9a6b12; --tone-a-bg:rgba(154,107,18,.13); --tone-b:#157f73; --tone-b-bg:rgba(21,127,115,.13);
+    --tone-c:#5f49b8; --tone-c-bg:rgba(95,73,184,.13); --tone-d:#3f8c31; --tone-d-bg:rgba(63,140,49,.13);
+    --tone-e:#c0522f; --tone-e-bg:rgba(192,82,47,.13);
+    --shadow:0 1px 2px rgba(20,28,40,.06),0 8px 24px rgba(20,28,40,.06);
+  }
+
+  * { box-sizing:border-box; }
+  html { scroll-behavior:smooth; scroll-padding-top:74px; }
+  @media (prefers-reduced-motion: reduce){ html{ scroll-behavior:auto; } }
+  body { margin:0; background:var(--bg); color:var(--text); font-family:var(--sans); font-size:17px; line-height:1.6; -webkit-font-smoothing:antialiased; }
+  h1,h2,h3 { font-family:var(--serif); font-weight:600; text-wrap:balance; line-height:1.15; margin:0; }
+  p { margin:0 0 1em; }
+  a { color:var(--accent); }
+  code { font-family:var(--mono); font-size:.92em; }
+  .wrap { max-width:var(--maxw); margin:0 auto; padding:0 22px; }
+  .prose { max-width:66ch; }
+  :focus-visible { outline:2px solid var(--accent); outline-offset:2px; border-radius:6px; }
+
+  /* nav */
+  header.nav { position:sticky; top:0; z-index:50; background:color-mix(in srgb,var(--bg) 84%,transparent); backdrop-filter:blur(12px) saturate(1.2); border-bottom:1px solid var(--border); }
+  .nav-in { display:flex; align-items:center; gap:18px; height:60px; }
+  .brand { display:flex; align-items:center; gap:10px; font-family:var(--serif); font-weight:600; font-size:18px; }
+  .brand svg { width:24px; height:24px; color:var(--accent); flex:none; }
+  .nav-links { display:flex; gap:4px; margin-left:auto; overflow-x:auto; scrollbar-width:none; }
+  .nav-links::-webkit-scrollbar { display:none; }
+  .nav-links a { color:var(--text-dim); text-decoration:none; font-size:14px; font-weight:500; padding:7px 11px; border-radius:8px; white-space:nowrap; transition:color .15s, background .15s; }
+  .nav-links a:hover { color:var(--text); background:var(--bg-3); }
+  .nav-links a.active { color:var(--accent); background:var(--accent-soft); }
+  .theme-btn { flex:none; width:38px; height:38px; border-radius:9px; border:1px solid var(--border); background:var(--bg-3); color:var(--text-dim); cursor:pointer; display:grid; place-items:center; }
+  .theme-btn:hover { color:var(--accent); border-color:var(--border-2); }
+  .theme-btn svg { width:18px; height:18px; }
+  #progress { position:absolute; left:0; bottom:-1px; height:2px; background:var(--accent); width:0; transition:width .1s linear; }
+
+  /* hero */
+  .hero { position:relative; padding:84px 0 60px; overflow:hidden; }
+  .hero::before { content:""; position:absolute; inset:0; z-index:-1; background:radial-gradient(700px 380px at 78% 8%,var(--accent-soft),transparent 70%),radial-gradient(560px 320px at 8% 92%,color-mix(in srgb,var(--tone-c) 12%,transparent),transparent 72%); }
+  .eyebrow { font-family:var(--mono); font-size:12.5px; letter-spacing:.22em; text-transform:uppercase; color:var(--accent); margin-bottom:18px; }
+  .hero h1 { font-size:clamp(2.5rem,6.5vw,4.6rem); letter-spacing:-.02em; }
+  .hero .sub { display:block; font-size:clamp(1.02rem,2.4vw,1.45rem); font-family:var(--sans); font-weight:400; color:var(--text-dim); margin-top:18px; max-width:40ch; line-height:1.45; }
+  .hero-cta { display:flex; flex-wrap:wrap; gap:12px; margin-top:32px; }
+  .btn { display:inline-flex; align-items:center; gap:8px; font:inherit; font-weight:600; font-size:15px; padding:12px 20px; border-radius:10px; border:1px solid transparent; cursor:pointer; text-decoration:none; transition:transform .12s, background .15s, border-color .15s; }
+  .btn:active { transform:translateY(1px); }
+  .btn.primary { background:var(--accent); color:#14100a; }
+  .btn.primary:hover { background:var(--accent-2); }
+  .btn.ghost { background:var(--bg-3); color:var(--text); border-color:var(--border); }
+  .btn.ghost:hover { border-color:var(--border-2); }
+
+  /* оглавление-путь */
+  .path { border-top:1px solid var(--border); padding:26px 0 4px; }
+  .path .plead { font-family:var(--mono); font-size:12px; letter-spacing:.18em; text-transform:uppercase; color:var(--text-faint); margin-bottom:14px; }
+  .path-grid { display:grid; grid-template-columns:repeat(auto-fit,minmax(150px,1fr)); gap:10px; }
+  .path-card { text-align:left; background:var(--bg-3); border:1px solid var(--border); border-radius:10px; padding:13px 14px; cursor:pointer; text-decoration:none; color:inherit; display:flex; flex-direction:column; gap:7px; box-shadow:var(--shadow); transition:border-color .15s, transform .12s; }
+  .path-card:hover { border-color:var(--accent); transform:translateY(-2px); }
+  .path-card .pnum { font-family:var(--mono); font-size:11px; color:var(--accent); letter-spacing:.1em; }
+  .path-card .pt { font-family:var(--serif); font-weight:600; font-size:1.02rem; line-height:1.2; }
+  .path-card .pd { font-size:11.5px; color:var(--text-faint); line-height:1.4; }
+  .pdots, .level-dots { display:inline-flex; gap:4px; }
+  .pdots i { width:6px; height:6px; border-radius:50%; background:var(--border-2); display:block; }
+  .pdots i.on { background:var(--accent); }
+
+  /* разделители уровней */
+  .level { border-top:1px solid var(--border); background:var(--bg-2); padding:42px 0 8px; }
+  .level + section { border-top:none; padding-top:30px; }
+  .level-meta { display:flex; align-items:center; gap:12px; margin-bottom:10px; flex-wrap:wrap; }
+  .level-tag { font-family:var(--mono); font-size:12px; letter-spacing:.16em; text-transform:uppercase; color:var(--accent); font-weight:600; }
+  .level-dots i { width:9px; height:9px; border-radius:50%; background:var(--border-2); display:block; }
+  .level-dots i.on { background:var(--accent); }
+  .level-diff { font-size:12px; color:var(--text-faint); font-family:var(--mono); }
+  .level-title { font-family:var(--serif); font-size:clamp(1.5rem,3vw,2.05rem); margin-bottom:6px; letter-spacing:-.01em; }
+  .level-desc { color:var(--text-dim); font-size:1.02rem; max-width:62ch; margin:0; }
+
+  /* секции */
+  section { padding:64px 0; border-top:1px solid var(--border); }
+  .sec-label { font-family:var(--mono); font-size:12px; letter-spacing:.2em; text-transform:uppercase; color:var(--accent); margin-bottom:12px; }
+  section h2 { font-size:clamp(1.6rem,3.4vw,2.4rem); letter-spacing:-.01em; margin-bottom:8px; }
+  .sec-intro { color:var(--text-dim); font-size:1.05rem; max-width:64ch; margin-bottom:30px; }
+
+  .blocks { display:flex; flex-direction:column; gap:22px; }
+  .b-prose { max-width:70ch; color:var(--text-dim); }
+  .b-prose b { color:var(--text); }
+  .grid { display:grid; gap:16px; grid-template-columns:repeat(auto-fit,minmax(230px,1fr)); }
+  .card { background:var(--bg-3); border:1px solid var(--border); border-radius:var(--r); padding:22px; box-shadow:var(--shadow); }
+  .card h3 { font-size:1.18rem; margin-bottom:8px; }
+  .card p { font-size:14.5px; color:var(--text-dim); margin:0; }
+  .card .ic { width:34px; height:34px; border-radius:9px; display:grid; place-items:center; margin-bottom:14px; background:var(--accent-soft); color:var(--accent); font-family:var(--serif); font-weight:600; }
+
+  .compare { display:grid; grid-template-columns:1fr 1fr; gap:16px; }
+  @media (max-width:720px){ .compare { grid-template-columns:1fr; } }
+  .compare .col { border-radius:var(--r); padding:22px; border:1px solid var(--border); background:var(--bg-3); }
+  .compare .bad { border-color:color-mix(in srgb,var(--danger) 34%,var(--border)); }
+  .compare .good { border-color:color-mix(in srgb,var(--ok) 34%,var(--border)); }
+  .compare h4 { margin:0 0 12px; font-family:var(--sans); font-size:13px; letter-spacing:.04em; text-transform:uppercase; }
+  .compare .bad h4 { color:var(--danger); } .compare .good h4 { color:var(--ok); }
+  .compare ul { margin:0; padding-left:18px; } .compare li { font-size:14.5px; color:var(--text-dim); margin-bottom:9px; }
+
+  .tablewrap { overflow-x:auto; border:1px solid var(--border); border-radius:12px; }
+  table { border-collapse:collapse; width:100%; min-width:520px; font-size:14px; }
+  th,td { text-align:left; padding:12px 15px; border-bottom:1px solid var(--border); vertical-align:top; }
+  thead th { background:var(--bg-2); font-size:12px; letter-spacing:.06em; text-transform:uppercase; color:var(--text-dim); font-weight:600; }
+  tbody tr:last-child td { border-bottom:none; }
+  td .note { color:var(--text-dim); font-size:13px; }
+
+  .accordion { display:flex; flex-direction:column; gap:10px; }
+  .accordion details { background:var(--bg-3); border:1px solid var(--border); border-radius:12px; box-shadow:var(--shadow); overflow:hidden; }
+  .accordion summary { cursor:pointer; padding:16px 20px; font-family:var(--serif); font-size:1.1rem; font-weight:600; list-style:none; display:flex; align-items:center; gap:12px; }
+  .accordion summary::-webkit-details-marker { display:none; }
+  .accordion summary .chev { margin-left:auto; transition:transform .2s; color:var(--accent); flex:none; width:18px; height:18px; }
+  .accordion details[open] summary .chev { transform:rotate(90deg); }
+  .accordion .abody { padding:0 20px 18px; font-size:15px; color:var(--text-dim); line-height:1.6; }
+  .accordion .abody b { color:var(--text); }
+
+  .callout { background:var(--accent-soft); border:1px solid color-mix(in srgb,var(--accent) 30%,var(--border)); border-radius:var(--r); padding:20px 22px; }
+  .callout h3 { font-size:1.2rem; margin-bottom:10px; }
+  .callout p { font-size:14.5px; color:var(--text); margin:0; }
+  .callout b { color:var(--accent); }
+
+  .code { font-family:var(--mono); font-size:12.5px; background:#0c1119; border:1px solid #223047; border-radius:10px; padding:15px 17px; overflow-x:auto; color:#aeb9c7; line-height:1.7; white-space:pre; }
+
+  .steps { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; }
+  .steps li { display:flex; gap:12px; font-size:14.5px; color:var(--text-dim); }
+  .steps li .n { font-family:var(--mono); font-weight:700; color:var(--accent); flex:none; width:22px; }
+  .steps li b { color:var(--text); }
+
+  .pill { display:inline-block; font-family:var(--mono); font-size:11px; padding:2px 9px; border-radius:999px; font-weight:600; }
+  .pill.danger { background:var(--danger-soft); color:var(--danger); border:1px solid color-mix(in srgb,var(--danger) 35%,transparent); }
+
+  /* симулятор */
+  .sim { background:var(--bg-2); border:1px solid var(--border); border-radius:16px; padding:20px; box-shadow:var(--shadow); }
+  .actors { display:grid; gap:12px; margin-bottom:16px; }
+  .actor { background:var(--bg-3); border:1px solid var(--border); border-radius:12px; padding:14px; transition:border-color .25s, box-shadow .25s; }
+  .actor.hot { border-color:var(--accent); box-shadow:0 0 0 3px var(--accent-soft); }
+  .actor .aname { font-family:var(--serif); font-size:1.05rem; font-weight:600; }
+  .actor .arole { font-family:var(--mono); font-size:10.5px; letter-spacing:.08em; text-transform:uppercase; color:var(--text-faint); margin-top:2px; }
+  .flowmap { position:relative; height:66px; margin:2px 0 16px; }
+  .flowmap svg { width:100%; height:100%; overflow:visible; }
+  .flowmap .lane { stroke:var(--border-2); stroke-width:2; }
+  .flowmap .msgline { stroke:var(--accent); stroke-width:2.5; stroke-linecap:round; }
+  .flowmap .node { fill:var(--bg-3); stroke:var(--border-2); stroke-width:2; }
+  .flowmap .node.hot { stroke:var(--accent); }
+  .flowmap .nlabel { fill:var(--text-dim); font-family:var(--mono); font-size:10px; font-weight:600; }
+  .flowmap .dot { fill:var(--accent); filter:drop-shadow(0 0 5px var(--accent)); }
+  .flowmap .arrow { fill:var(--accent); }
+  .stepbar { display:flex; align-items:center; gap:10px; margin-bottom:16px; flex-wrap:wrap; }
+  .steps-dots { display:flex; gap:6px; margin:0 auto; flex-wrap:wrap; }
+  .sdot { width:30px; height:30px; border-radius:8px; border:1px solid var(--border); background:var(--bg-3); color:var(--text-dim); font-family:var(--mono); font-size:13px; font-weight:600; cursor:pointer; transition:all .15s; }
+  .sdot:hover { border-color:var(--border-2); color:var(--text); }
+  .sdot.active { background:var(--accent); border-color:var(--accent); color:#14100a; }
+  .sdot.done { color:var(--accent); border-color:color-mix(in srgb,var(--accent) 45%,var(--border)); }
+  .navbtn { width:40px; height:40px; border-radius:10px; border:1px solid var(--border); background:var(--bg-3); color:var(--text); cursor:pointer; display:grid; place-items:center; transition:all .15s; }
+  .navbtn:hover:not(:disabled) { border-color:var(--accent); color:var(--accent); }
+  .navbtn:disabled { opacity:.35; cursor:default; }
+  .navbtn svg { width:18px; height:18px; }
+  .detail { display:grid; grid-template-columns:1.25fr 1fr; gap:16px; }
+  @media (max-width:760px){ .detail { grid-template-columns:1fr; } }
+  .dpanel { background:var(--bg-3); border:1px solid var(--border); border-radius:12px; padding:18px; }
+  .dhead { display:flex; align-items:baseline; gap:10px; flex-wrap:wrap; margin-bottom:4px; }
+  .dhead .msgname { font-family:var(--mono); font-weight:700; font-size:15px; color:var(--accent); }
+  .dhead .dir { font-size:13px; color:var(--text-dim); font-weight:600; }
+  .dpanel h3 { font-size:1.3rem; margin:6px 0 10px; }
+  .dpanel .what { font-size:15px; color:var(--text-dim); }
+  .dpanel .result { margin-top:14px; padding:12px 14px; border-radius:10px; background:var(--accent-soft); border:1px solid color-mix(in srgb,var(--accent) 26%,transparent); font-size:14px; }
+  .dpanel .result b { color:var(--accent); }
+  .envelope { background:var(--bg-2); border:1px solid var(--border); border-radius:12px; padding:16px; }
+  .envelope .etitle { font-family:var(--mono); font-size:11px; letter-spacing:.14em; text-transform:uppercase; color:var(--text-faint); margin-bottom:12px; }
+  .field { border:1px solid var(--border-2); border-radius:9px; padding:10px 12px; margin-bottom:9px; }
+  .field:last-child { margin-bottom:0; }
+  .field .frow { display:flex; align-items:center; justify-content:space-between; gap:8px; }
+  .field .flabel { font-family:var(--mono); font-size:13px; font-weight:600; }
+  .field .fbody { font-size:12.5px; color:var(--text-dim); margin-top:6px; line-height:1.45; }
+  .badge { font-family:var(--mono); font-size:10.5px; font-weight:700; padding:2px 8px; border-radius:999px; border:1px solid; white-space:nowrap; }
+  .tone-a { color:var(--tone-a); background:var(--tone-a-bg); border-color:color-mix(in srgb,var(--tone-a) 40%,transparent); }
+  .tone-b { color:var(--tone-b); background:var(--tone-b-bg); border-color:color-mix(in srgb,var(--tone-b) 40%,transparent); }
+  .tone-c { color:var(--tone-c); background:var(--tone-c-bg); border-color:color-mix(in srgb,var(--tone-c) 40%,transparent); }
+  .tone-d { color:var(--tone-d); background:var(--tone-d-bg); border-color:color-mix(in srgb,var(--tone-d) 40%,transparent); }
+  .tone-e { color:var(--tone-e); background:var(--tone-e-bg); border-color:color-mix(in srgb,var(--tone-e) 40%,transparent); }
+  .field.enc.tone-a { background:var(--tone-a-bg); border-color:color-mix(in srgb,var(--tone-a) 45%,transparent); }
+  .field.enc.tone-b { background:var(--tone-b-bg); border-color:color-mix(in srgb,var(--tone-b) 45%,transparent); }
+  .field.enc.tone-c { background:var(--tone-c-bg); border-color:color-mix(in srgb,var(--tone-c) 45%,transparent); }
+  .field.enc.tone-d { background:var(--tone-d-bg); border-color:color-mix(in srgb,var(--tone-d) 45%,transparent); }
+  .field.enc.tone-e { background:var(--tone-e-bg); border-color:color-mix(in srgb,var(--tone-e) 45%,transparent); }
+
+  /* квиз */
+  .quiz { display:grid; gap:16px; }
+  .q { background:var(--bg-3); border:1px solid var(--border); border-radius:12px; padding:20px; box-shadow:var(--shadow); }
+  .q .qn { font-family:var(--mono); font-size:12px; color:var(--accent); letter-spacing:.1em; }
+  .q .qq { font-weight:600; font-size:1.05rem; margin-bottom:4px; }
+  .opts { display:grid; gap:8px; margin-top:14px; }
+  .opt { text-align:left; font:inherit; font-size:14.5px; padding:12px 14px; border-radius:10px; border:1px solid var(--border); background:var(--bg-2); color:var(--text); cursor:pointer; display:flex; align-items:center; gap:11px; transition:border-color .15s, background .15s; }
+  .opt:hover:not(:disabled) { border-color:var(--border-2); }
+  .opt .mark { width:22px; height:22px; border-radius:50%; border:1.5px solid var(--border-2); flex:none; display:grid; place-items:center; font-size:13px; }
+  .opt.correct { border-color:var(--ok); background:color-mix(in srgb,var(--ok) 12%,var(--bg-2)); }
+  .opt.correct .mark { border-color:var(--ok); background:var(--ok); color:#fff; }
+  .opt.wrong { border-color:var(--danger); background:color-mix(in srgb,var(--danger) 12%,var(--bg-2)); }
+  .opt.wrong .mark { border-color:var(--danger); background:var(--danger); color:#fff; }
+  .opt:disabled { cursor:default; }
+  .explain { margin-top:12px; font-size:14px; color:var(--text-dim); padding:12px 14px; border-radius:10px; background:var(--bg-2); border-left:3px solid var(--accent); display:none; }
+  .explain.show { display:block; }
+  .quizscore { text-align:center; font-family:var(--mono); color:var(--text-dim); margin-top:20px; font-size:14px; }
+  .quizscore b { color:var(--accent); }
+
+  /* карточки */
+  .deck { max-width:640px; margin:0 auto; }
+  .deck-meta { text-align:center; font-family:var(--mono); font-size:13px; color:var(--text-dim); margin-bottom:14px; }
+  .deck-meta b { color:var(--accent); }
+  .fcard { perspective:1400px; height:250px; margin-bottom:18px; cursor:pointer; }
+  .fcard-inner { position:relative; width:100%; height:100%; transition:transform .5s cubic-bezier(.4,.1,.2,1); transform-style:preserve-3d; }
+  .fcard.flipped .fcard-inner { transform:rotateY(180deg); }
+  .fcard-face { position:absolute; inset:0; -webkit-backface-visibility:hidden; backface-visibility:hidden; border-radius:16px; border:1px solid var(--border); box-shadow:var(--shadow); display:flex; flex-direction:column; align-items:center; justify-content:center; padding:30px; text-align:center; }
+  .fcard-front { background:var(--bg-3); } .fcard-back { background:var(--bg-2); transform:rotateY(180deg); }
+  .fcard .ftag { position:absolute; top:16px; font-family:var(--mono); font-size:11px; letter-spacing:.16em; text-transform:uppercase; color:var(--text-faint); }
+  .fcard .fq { font-family:var(--serif); font-size:1.4rem; text-wrap:balance; }
+  .fcard .fa { font-size:15px; color:var(--text-dim); line-height:1.55; }
+  .fcard .hint { position:absolute; bottom:14px; font-size:11.5px; color:var(--text-faint); font-family:var(--mono); }
+  .deck-controls { display:flex; gap:10px; justify-content:center; }
+  .deck-done { text-align:center; padding:24px; border-radius:14px; border:1px solid var(--border); background:var(--bg-3); box-shadow:var(--shadow); display:none; }
+  .deck-done.show { display:block; }
+  .deck-done .big { font-family:var(--serif); font-size:1.5rem; margin-bottom:8px; }
+  @media (prefers-reduced-motion: reduce){ .fcard-inner { transition:none; } }
+
+  /* экзамен */
+  .exam-bar { display:flex; align-items:center; justify-content:space-between; gap:12px; margin-bottom:18px; flex-wrap:wrap; position:sticky; top:62px; background:color-mix(in srgb,var(--bg) 90%,transparent); backdrop-filter:blur(8px); padding:10px 0; z-index:5; border-bottom:1px solid var(--border); }
+  .exam-timer { font-family:var(--mono); font-size:15px; color:var(--text); font-variant-numeric:tabular-nums; }
+  .exam-timer b { color:var(--accent); }
+  .exam-prog { font-family:var(--mono); font-size:13px; color:var(--text-dim); }
+  .exq { background:var(--bg-3); border:1px solid var(--border); border-radius:12px; padding:20px; box-shadow:var(--shadow); }
+  .exq .exn { font-family:var(--mono); font-size:12px; color:var(--accent); letter-spacing:.08em; }
+  .exq .qq { font-weight:600; font-size:1.02rem; margin-bottom:6px; }
+  .exopts { display:grid; gap:8px; margin-top:12px; }
+  .exopt { text-align:left; font:inherit; font-size:14.5px; padding:11px 14px; border-radius:10px; border:1px solid var(--border); background:var(--bg-2); color:var(--text); cursor:pointer; display:flex; gap:11px; align-items:center; transition:border-color .12s, background .12s; }
+  .exopt:hover:not(:disabled) { border-color:var(--border-2); }
+  .exopt .mk { width:20px; height:20px; border-radius:50%; border:1.5px solid var(--border-2); flex:none; display:grid; place-items:center; font-size:12px; color:#fff; }
+  .exopt.sel { border-color:var(--accent); background:var(--accent-soft); }
+  .exopt.sel .mk { border-color:var(--accent); background:var(--accent); }
+  .exopt.correct { border-color:var(--ok); background:color-mix(in srgb,var(--ok) 12%,var(--bg-2)); }
+  .exopt.correct .mk { background:var(--ok); border-color:var(--ok); }
+  .exopt.wrongpick { border-color:var(--danger); background:color-mix(in srgb,var(--danger) 12%,var(--bg-2)); }
+  .exopt.wrongpick .mk { background:var(--danger); border-color:var(--danger); }
+  .exopt:disabled { cursor:default; }
+  .exex { margin-top:10px; font-size:13.5px; color:var(--text-dim); padding:10px 12px; border-radius:9px; background:var(--bg-2); border-left:3px solid var(--accent); display:none; }
+  .exex.show { display:block; }
+  .exam-result { text-align:center; padding:26px; border-radius:14px; border:1px solid var(--border); background:var(--bg-3); box-shadow:var(--shadow); margin-bottom:22px; }
+  .exam-result .big { font-family:var(--serif); font-size:3rem; line-height:1; }
+  .exam-result .badge2 { display:inline-block; margin-top:12px; padding:5px 16px; border-radius:999px; font-weight:600; font-size:14px; }
+  .exam-result.pass { border-color:color-mix(in srgb,var(--ok) 40%,var(--border)); }
+  .exam-result.pass .badge2 { background:color-mix(in srgb,var(--ok) 14%,transparent); color:var(--ok); }
+  .exam-result.fail .badge2 { background:var(--danger-soft); color:var(--danger); }
+  .exam-result .sub { color:var(--text-dim); font-size:14px; margin-top:10px; }
+
+  /* глоссарий */
+  .glossary dl { display:grid; grid-template-columns:repeat(auto-fit,minmax(280px,1fr)); gap:0 30px; margin:0; }
+  .glossary dt { font-family:var(--mono); font-weight:700; color:var(--accent); font-size:14px; margin-top:16px; }
+  .glossary dd { margin:4px 0 0; font-size:14px; color:var(--text-dim); }
+
+  /* терминал-тренажёр */
+  .lab { display:grid; grid-template-columns:1.7fr 1fr; gap:16px; }
+  @media (max-width:860px){ .lab { grid-template-columns:1fr; } }
+  .term { background:#0c1119; border:1px solid #223047; border-radius:14px; overflow:hidden; display:flex; flex-direction:column; box-shadow:var(--shadow); min-height:430px; }
+  .term-bar { display:flex; align-items:center; gap:10px; padding:10px 14px; background:#121b28; border-bottom:1px solid #223047; }
+  .term-bar .dots { display:flex; gap:6px; }
+  .term-bar .dots i { width:11px; height:11px; border-radius:50%; display:block; background:#39485c; }
+  .term-bar .dots i:nth-child(1){ background:#e0644c; } .term-bar .dots i:nth-child(2){ background:#d8ad5a; } .term-bar .dots i:nth-child(3){ background:#6bbf7a; }
+  .term-title { font-family:var(--mono); font-size:12px; color:#6b7a8d; }
+  .term-reset { margin-left:auto; font:inherit; font-family:var(--mono); font-size:11px; color:#6b7a8d; background:transparent; border:1px solid #223047; border-radius:6px; padding:3px 10px; cursor:pointer; }
+  .term-reset:hover { color:#d7e0ea; border-color:#39485c; }
+  .term-body { flex:1; overflow-y:auto; padding:14px 16px; font-family:var(--mono); font-size:13px; line-height:1.55; color:#d7e0ea; white-space:pre-wrap; word-break:break-word; max-height:360px; }
+  .term-body > div { margin:1px 0; }
+  .term-body .cmd-echo .ps { color:#6bbf7a; }
+  .term-body .out { color:#aeb9c7; }
+  .term-body .err { color:#ec8a6b; }
+  .term-body .note { color:#dcb15e; border-left:2px solid #5a4a1e; padding-left:9px; font-style:italic; }
+  .term-body .muted { color:#6b7a8d; }
+  .term-input { display:flex; align-items:center; gap:8px; padding:11px 16px; border-top:1px solid #223047; background:#0c1119; }
+  .term-input .ps1 { color:#6bbf7a; font-family:var(--mono); font-size:13px; white-space:nowrap; }
+  .term-input input { flex:1; background:transparent; border:none; outline:none; color:#d7e0ea; font-family:var(--mono); font-size:13px; caret-color:#6bbf7a; min-width:40px; }
+  .missions { background:var(--bg-3); border:1px solid var(--border); border-radius:14px; padding:18px 20px; box-shadow:var(--shadow); align-self:start; }
+  .missions h3 { font-size:1.05rem; margin-bottom:12px; }
+  .missions ul { list-style:none; margin:0; padding:0; display:flex; flex-direction:column; gap:10px; }
+  .missions li { display:flex; gap:10px; align-items:flex-start; font-size:13.5px; color:var(--text-dim); }
+  .missions li .box { width:20px; height:20px; border-radius:6px; border:1.6px solid var(--border-2); flex:none; display:grid; place-items:center; font-size:12px; color:#fff; transition:background .2s, border-color .2s; }
+  .missions li.done { color:var(--text); }
+  .missions li.done .box { background:var(--ok); border-color:var(--ok); }
+  .missions li code, .mission-hint code { font-family:var(--mono); font-size:12px; background:var(--bg-2); padding:1px 5px; border-radius:5px; color:var(--accent); }
+  .mission-hint { margin-top:14px; font-size:12.5px; color:var(--text-faint); }
+  .mission-done { margin-top:14px; padding:11px 13px; border-radius:9px; background:color-mix(in srgb,var(--ok) 12%,var(--bg-2)); border:1px solid color-mix(in srgb,var(--ok) 30%,transparent); font-size:13px; display:none; }
+  .mission-done.show { display:block; }
+  .quickcmds { display:flex; flex-wrap:wrap; gap:8px; margin-top:14px; }
+  .quickcmds .qc { font-family:var(--mono); font-size:12.5px; padding:6px 11px; border-radius:8px; border:1px solid var(--border); background:var(--bg-3); color:var(--text); cursor:pointer; transition:color .15s, border-color .15s; }
+  .quickcmds .qc:hover { border-color:var(--accent); color:var(--accent); }
+
+  footer { padding:40px 0 56px; border-top:1px solid var(--border); color:var(--text-faint); font-size:13.5px; }
+  footer .wrap { display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; align-items:center; }
+  .inline-k { font-family:var(--mono); font-weight:600; padding:1px 5px; border-radius:5px; font-size:.92em; background:var(--bg-2); border:1px solid var(--border); }
+  mark.hl { background:var(--accent-soft); color:var(--accent); padding:1px 5px; border-radius:5px; font-weight:600; }
+</style>
+
+<header class="nav">
+  <div class="wrap nav-in">
+    <span class="brand" id="brand"></span>
+    <nav class="nav-links" id="navlinks"></nav>
+    <button class="theme-btn" id="themeBtn" aria-label="Переключить тему">
+      <svg id="themeIcon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"></svg>
+    </button>
+  </div>
+  <div id="progress"></div>
+</header>
+<div id="hero"></div>
+<main id="main"></main>
+<footer>
+  <div class="wrap">
+    <span id="footNote"></span>
+    <span>Собрано на шаблоне LearningPlatform · один файл, работает офлайн.</span>
+  </div>
+</footer>
+
+<script>
+/* =========================================================================
+   LEARNINGPLATFORM — ШАБЛОН ИНТЕРАКТИВНОГО КУРСА
+   -------------------------------------------------------------------------
+   Чтобы сделать НОВЫЙ курс — редактируйте ТОЛЬКО объект COURSE ниже.
+   Движок (CSS + функции рендера под объектом) трогать не нужно.
+
+   COURSE.meta       — заголовок, подзаголовок, акцентный цвет (accent).
+   COURSE.levels[]    — уровни сложности. Создают навигацию, оглавление
+                        и разделители-«главы». Поля: {id, tag, title, desc,
+                        diff, dots} (dots 1..5 — шкала сложности).
+   COURSE.sections[]  — секции по порядку. Каждая привязана к level по id.
+       обычная:        {id, level, label, title, intro, blocks:[...]}
+       интерактивная:  {id, level, type, label, title, intro}
+                        type: 'simulator' | 'quiz' | 'flashcards' | 'exam' | 'glossary' | 'terminal'
+   БЛОКИ (конструктор контента для обычных секций):
+       {t:'prose',    html}
+       {t:'cards',    items:[{title, body, ic}]}          ic — 1-2 символа в кружке
+       {t:'compare',  bad:{title,items:[]}, good:{title,items:[]}}
+       {t:'table',    head:[...], rows:[[...]]}
+       {t:'accordion',items:[{q, a}]}
+       {t:'callout',  title, html}
+       {t:'code',     text}
+       {t:'steps',    items:[...]}
+   COURSE.simulator   — {actors:[{id,name,role}], steps:[{from,to,name,dir,
+                        title,what,result,fields:[{label,badge,tone,body}]}]}
+                        tone: 'a'..'e' (5 категориальных цветов) или '' — нейтральный.
+   COURSE.quiz / .exam — [{q, opts:[...], a:индекс_верного, e:пояснение, hard?}]
+   COURSE.flashcards   — [{q, a}]
+   COURSE.glossary     — [[термин, определение], ...]
+   COURSE.terminal     — необязательный тренажёр командной строки. Поля: {title, prompt,
+                        greeting, help, hint, quick:[...], missions:[{id, text}],
+                        commands:[{name, run:function(args, ctx){...}}]}. Внутри run доступен
+                        ctx: {out, print, note, muted, error, clear, complete(id), cfg, state,
+                        helpText, argsRaw}. Данные для команд (напр. зону DNS) держите в самом
+                        объекте terminal и читайте через ctx.cfg. Задание отмечается ctx.complete(id).
+
+   Ниже — ПРИМЕР курса «Как работает DNS». Замените его своим содержимым.
+   ========================================================================= */
+
+var COURSE = {
+  meta: {
+    title: "Как работает DNS",
+    kicker: "Сети · разрешение имён",
+    subtitle: "Как имя example.com превращается в IP-адрес — по шагам, с интерактивным симулятором, карточками и экзаменом.",
+    accent: "#2f7fb0"   // акцент курса; уберите строку — будет цвет по умолчанию
+  },
+
+  levels: [
+    { id:"lvl-basics",   tag:"Уровень 1", title:"Основы: зачем и кто",       desc:"Какую задачу решает DNS и кто участвует в разрешении имени.", diff:"для новичка", dots:1 },
+    { id:"lvl-resolve",  tag:"Уровень 2", title:"Разрешение имени",          desc:"Полный путь запроса в симуляторе, типы записей и роль кэша.",  diff:"уверенный пользователь", dots:3 },
+    { id:"lvl-final",    tag:"Финал",     title:"Повторение и проверка",      desc:"Карточки, словарь и итоговый экзамен по всему курсу.",         diff:"проверка", dots:5 }
+  ],
+
+  sections: [
+    { id:"why", level:"lvl-basics", label:"Проблема", title:"Зачем нужен DNS",
+      intro:"Компьютеры общаются по IP-адресам, а люди помнят имена. DNS — это телефонная книга интернета, которая переводит одно в другое.",
+      blocks:[
+        { t:"compare",
+          bad:{ title:"✗ Без DNS", items:["Пришлось бы помнить 93.184.216.34 вместо example.com","Сменился сервер — у всех сломались ссылки","Один гигантский файл hosts на каждой машине","Нельзя балансировать нагрузку и геораспределять"] },
+          good:{ title:"✓ С DNS", items:["Люди используют имена, машины — адреса","IP можно менять прозрачно для пользователей","Иерархия и делегирование — масштабируется на весь мир","Кэш и TTL снижают нагрузку и ускоряют ответ"] } },
+        { t:"prose", html:"Ключевая идея — <mark class=\"hl\">иерархия и делегирование</mark>: ни один сервер не знает всё, но каждый знает, кого спросить дальше. Разберём это в симуляторе." }
+      ] },
+
+    { id:"cast", level:"lvl-basics", label:"Участники", title:"Кто участвует в разрешении",
+      intro:"Пять ролей передают запрос по цепочке, сужая поиск от «всего интернета» до конкретного сервера.",
+      blocks:[
+        { t:"cards", items:[
+          { ic:"PC", title:"Stub-резолвер", body:"Крошечный клиент в вашей ОС. Умеет только спросить рекурсивный резолвер и подождать ответ." },
+          { ic:"R",  title:"Рекурсивный резолвер", body:"Делает всю работу: обходит серверы сверху вниз. Обычно у провайдера или публичный (8.8.8.8, 1.1.1.1)." },
+          { ic:".",  title:"Корневой сервер", body:"Вершина иерархии. Не знает адрес сайта, но знает, кто отвечает за зону .com, .ru и т.д." },
+          { ic:"T",  title:"TLD-сервер", body:"Отвечает за домен верхнего уровня (.com). Знает, какой сервер авторитетен для example.com." },
+          { ic:"A",  title:"Авторитетный сервер", body:"Хранит настоящие записи зоны example.com и выдаёт финальный ответ." }
+        ] },
+        { t:"callout", title:"Рекурсивный против итеративного", html:"<b>Stub</b> задаёт <b>рекурсивный</b> вопрос («узнай всё и верни ответ»). А сам резолвер идёт <b>итеративно</b>: каждый сервер отвечает «я не знаю, но спроси вот этих» (referral)." }
+      ] },
+
+    { id:"sim", level:"lvl-resolve", type:"simulator", label:"Главное · интерактив",
+      title:"Симулятор: путь запроса www.example.com",
+      intro:"Кликайте по шагам или жмите стрелки. Следите, как резолвер спускается по иерархии и как ответ возвращается и кэшируется." },
+
+    { id:"records", level:"lvl-resolve", label:"Справочник", title:"Основные типы записей",
+      intro:"В зоне хранятся не только адреса. Вот записи, которые встречаются чаще всего.",
+      blocks:[
+        { t:"table",
+          head:["Запись","Что задаёт","Пример значения"],
+          rows:[
+            ["A","IPv4-адрес имени","93.184.216.34"],
+            ["AAAA","IPv6-адрес имени","2606:2800:220:1:248:1893:25c8:1946"],
+            ["CNAME","Псевдоним (ссылка на другое имя)","www → example.com"],
+            ["MX","Почтовый сервер домена","10 mail.example.com"],
+            ["NS","Авторитетные серверы зоны","ns1.example.com"],
+            ["TXT","Произвольный текст (SPF, проверки)","v=spf1 include:_spf..."]
+          ] }
+      ] },
+
+    { id:"cache", level:"lvl-resolve", label:"Скорость", title:"Кэш и TTL",
+      intro:"Проходить всю цепочку каждый раз — дорого. Поэтому ответы кэшируются на время, заданное в TTL.",
+      blocks:[
+        { t:"prose", html:"У каждой записи есть <b>TTL</b> (time to live) — сколько секунд её можно держать в кэше. Пока TTL не истёк, резолвер отдаёт ответ мгновенно, не беспокоя другие серверы." },
+        { t:"code", text:"$ dig +noall +answer www.example.com\nwww.example.com.  3600  IN  A  93.184.216.34\n#                 ^^^^  TTL в секундах (здесь 1 час)" },
+        { t:"accordion", items:[
+          { q:"Почему смена IP «доходит не сразу»?", a:"Старая запись живёт в кэшах по всему миру до конца своего TTL. Поэтому перед переездом TTL заранее уменьшают (например, до 300 секунд)." },
+          { q:"Что такое отрицательное кэширование?", a:"Ответ «такого имени нет» (NXDOMAIN) тоже кэшируется — на время, заданное в SOA-записи зоны, чтобы не спрашивать снова и снова." }
+        ] }
+      ] },
+
+    { id:"lab", level:"lvl-resolve", type:"terminal", label:"Практика · песочница", title:"Тренажёр: dig, nslookup, host",
+      intro:"Настоящие DNS-инструменты в безопасной песочнице. Выполните задания справа или наберите help. Команды подписаны связью с симулятором выше." },
+
+    { id:"quiz", level:"lvl-resolve", type:"quiz", label:"Проверка", title:"Закрепим: мини-квиз",
+      intro:"Несколько вопросов на понимание. Выберите ответ — сразу увидите объяснение." },
+
+    { id:"glossary", level:"lvl-final", type:"glossary", label:"Шпаргалка", title:"Словарь терминов",
+      intro:"Всё, что стоит держать в голове, — на одной странице." },
+
+    { id:"cards", level:"lvl-final", type:"flashcards", label:"Закрепление в памяти", title:"Флеш-карточки",
+      intro:"Прочитайте вопрос, переверните карточку, честно оцените себя. «Повторить позже» вернёт карточку в конец колоды." },
+
+    { id:"exam", level:"lvl-final", type:"exam", label:"Финальная проверка", title:"Итоговый экзамен",
+      intro:"Вопросы по всему курсу. Время засекается, но не ограничено. Проходной балл — 70%." }
+  ],
+
+  simulator: {
+    actors: [
+      { id:"stub", name:"Ваш ПК", role:"stub-резолвер" },
+      { id:"res",  name:"Резолвер", role:"рекурсивный" },
+      { id:"root", name:"Корень", role:"root" },
+      { id:"tld",  name:"TLD .com", role:"tld" },
+      { id:"auth", name:"example.com", role:"авторитетный" }
+    ],
+    steps: [
+      { from:"stub", to:"res", name:"Запрос", dir:"ПК → Резолвер", title:"Какой IP у www.example.com?",
+        what:"Ваш браузер просит stub-резолвер ОС, а тот перекладывает работу на рекурсивный резолвер: «узнай адрес и верни мне». Флаг RD (recursion desired) означает «сделай всё сам».",
+        fields:[ { label:"Вопрос", badge:"запрос", tone:"b", body:"www.example.com, тип A. RD=1 — прошу рекурсию." } ],
+        result:"Резолвер берёт запрос на себя. Если ответа нет в кэше — начинает обход сверху." },
+      { from:"res", to:"root", name:"К корню", dir:"Резолвер → Корень", title:"Кто отвечает за .com?",
+        what:"Резолвер не знает адрес сайта, но знает адреса корневых серверов (они «зашиты»). Спрашивает корень про зону .com.",
+        fields:[ { label:"Вопрос", badge:"запрос", tone:"b", body:"www.example.com? (итеративно, RD=0)" } ],
+        result:"Корень не хранит адреса сайтов — но знает, кто ведёт зону .com." },
+      { from:"root", to:"res", name:"Referral .com", dir:"Корень → Резолвер", title:"Спроси серверы .com",
+        what:"Корень отвечает не адресом, а «направлением» (referral): вот NS-серверы зоны .com, иди к ним.",
+        fields:[ { label:"Referral", badge:"referral", tone:"a", body:"NS для .com: a.gtld-servers.net … (+ их адреса)" } ],
+        result:"Резолвер спустился на уровень ниже — к TLD .com." },
+      { from:"res", to:"tld", name:"К TLD", dir:"Резолвер → TLD", title:"Кто ведёт example.com?",
+        what:"Резолвер спрашивает TLD-сервер .com про домен example.com.",
+        fields:[ { label:"Вопрос", badge:"запрос", tone:"b", body:"www.example.com? — к серверу .com" } ],
+        result:"TLD знает, какие серверы авторитетны для example.com." },
+      { from:"tld", to:"res", name:"Referral example.com", dir:"TLD → Резолвер", title:"Спроси серверы example.com",
+        what:"Снова referral: TLD .com отдаёт NS-записи зоны example.com.",
+        fields:[ { label:"Referral", badge:"referral", tone:"a", body:"NS для example.com: ns1.example.com …" } ],
+        result:"Осталось спросить того, кто хранит саму запись." },
+      { from:"res", to:"auth", name:"К авторитетному", dir:"Резолвер → Авторитетный", title:"Дай A-запись www.example.com",
+        what:"Резолвер обращается к авторитетному серверу зоны example.com — источнику истины.",
+        fields:[ { label:"Вопрос", badge:"запрос", tone:"b", body:"www.example.com, тип A?" } ],
+        result:"Авторитетный сервер хранит настоящую запись и готов ответить." },
+      { from:"auth", to:"res", name:"Ответ A", dir:"Авторитетный → Резолвер", title:"93.184.216.34, TTL 3600",
+        what:"Наконец — авторитетный ответ: адрес и TTL, сколько его можно кэшировать.",
+        fields:[ { label:"Ответ", badge:"ответ", tone:"d", body:"www.example.com A 93.184.216.34, TTL=3600" } ],
+        result:"У резолвера есть финальный адрес." },
+      { from:"res", to:"stub", name:"Ответ + кэш", dir:"Резолвер → ПК", title:"Вот адрес — и в кэш его",
+        what:"Резолвер запоминает ответ на время TTL (чтобы следующий такой запрос вернуть мгновенно) и отдаёт адрес вашему ПК.",
+        fields:[ { label:"Ответ", badge:"ответ", tone:"d", body:"93.184.216.34 — браузер открывает соединение" }, { label:"Кэш", badge:"cache", tone:"c", body:"запись сохранена на 3600 c" } ],
+        result:"Готово! Браузер подключается к 93.184.216.34. Повторный запрос теперь мгновенный — из кэша." }
+    ]
+  },
+
+  quiz: [
+    { q:"Кто выполняет основную работу по обходу серверов?", opts:["Stub-резолвер в ОС","Рекурсивный резолвер","Корневой сервер","Браузер"], a:1, e:"Stub только просит и ждёт. Всю цепочку root → TLD → авторитетный обходит рекурсивный резолвер." },
+    { q:"Что отвечает корневой сервер на запрос про www.example.com?", opts:["Готовый IP-адрес","Referral: адреса серверов зоны .com","Ошибку","Почтовый сервер"], a:1, e:"Корень не знает адрес сайта. Он даёт направление (referral) — к TLD-серверам .com." },
+    { q:"Зачем нужен TTL?", opts:["Шифрует запись","Задаёт, сколько секунд ответ можно держать в кэше","Ограничивает длину имени","Выбирает сервер"], a:1, e:"TTL — время жизни записи в кэше. Пока он не истёк, ответ отдают мгновенно, не беспокоя другие серверы." },
+    { q:"Какая запись задаёт почтовый сервер домена?", opts:["A","CNAME","MX","TXT"], a:2, e:"MX (Mail eXchange) указывает, какой сервер принимает почту для домена, и с каким приоритетом." }
+  ],
+
+  flashcards: [
+    { q:"Что делает DNS?", a:"Переводит доменное имя (example.com) в IP-адрес и обратно. Телефонная книга интернета." },
+    { q:"Stub vs рекурсивный резолвер?", a:"Stub (в ОС) только спрашивает и ждёт. Рекурсивный обходит всю иерархию серверов за него." },
+    { q:"Что такое referral?", a:"Ответ сервера «я не знаю, но спроси вот этих» — с NS-записями следующего уровня." },
+    { q:"Порядок обхода при разрешении?", a:"Резолвер → корень → TLD (.com) → авторитетный сервер зоны → ответ." },
+    { q:"Что такое TTL?", a:"Время жизни записи в кэше в секундах. Пока не истёк — ответ берут из кэша." },
+    { q:"Запись A и AAAA?", a:"A — IPv4-адрес имени, AAAA — IPv6-адрес имени." },
+    { q:"Запись CNAME?", a:"Псевдоним: одно имя ссылается на другое (www → example.com)." },
+    { q:"Что такое NXDOMAIN?", a:"Ответ «такого имени не существует». Тоже кэшируется (отрицательное кэширование)." },
+    { q:"Что показывает dig +trace?", a:"Полный путь разрешения: корневые серверы → TLD (.com) → авторитетный сервер зоны. Наглядно демонстрирует итеративный обход." },
+    { q:"Что делает dig +short?", a:"Печатает только значение ответа (например, сам IP), без служебных секций." },
+    { q:"Что такое glue-запись?", a:"A/AAAA-адрес сервера имён, отданный вместе с NS-делегированием, чтобы не возникло тупика «спроси ns1.example.com, который внутри самой example.com»." },
+    { q:"Зачем нужна SOA-запись?", a:"Start of Authority: параметры зоны — серийный номер, интервалы обновления и TTL отрицательного кэширования." },
+    { q:"Что означает приоритет в MX?", a:"Меньшее число — выше приоритет: почта сначала идёт на сервер с наименьшим значением." },
+    { q:"Чем nslookup отличается от dig?", a:"Оба резолвят имена, но dig даёт подробный вывод по секциям и флагам, а nslookup — более краткий и «человекочитаемый»." }
+  ],
+
+  exam: [
+    { q:"Сколько корневых зон в иерархии DNS над доменом .com?", opts:["Ноль","Одна (корень)","Две","Тысячи"], a:1, e:"Над TLD стоит единственная корневая зона (обозначается точкой), обслуживаемая набором корневых серверов." },
+    { q:"Что означает флаг RD в запросе?", opts:["Reverse DNS","Recursion Desired — прошу сделать всю работу","Record Data","Root Domain"], a:1, e:"RD (Recursion Desired) просит резолвер самому обойти иерархию и вернуть готовый ответ." },
+    { q:"Почему после смены IP старый адрес ещё какое-то время «живёт»?", opts:["Серверы медленные","Старая запись кэширована до конца TTL","DNS не поддерживает смену IP","Из-за брандмауэра"], a:1, e:"Записи кэшируются по всему миру до истечения их TTL — поэтому TTL уменьшают заранее перед переездом." },
+    { q:"Кто хранит настоящие записи зоны example.com?", opts:["Корневой сервер","TLD .com","Авторитетный сервер зоны","Провайдер"], a:2, e:"Источник истины для зоны — её авторитетные серверы (заданы NS-записями)." },
+    { q:"Что делает резолвер сразу после получения авторитетного ответа?", opts:["Удаляет его","Кэширует на время TTL и отдаёт клиенту","Спрашивает корень снова","Меняет IP"], a:1, e:"Резолвер сохраняет ответ в кэш на TTL и возвращает его клиенту — следующий такой запрос будет мгновенным." },
+    { q:"Тип запроса, которым резолвер идёт по иерархии?", opts:["Рекурсивный","Итеративный","Широковещательный","Зонный трансфер"], a:1, e:"Клиент к резолверу — рекурсивно; сам резолвер к серверам иерархии — итеративно, шаг за шагом по referral'ам." },
+    { q:"Запись CNAME для www указывает на example.com. Что вернётся на запрос A к www?", opts:["Ошибка","Резолвер пойдёт по CNAME и вернёт A целевого имени","Пустой ответ","IPv6"], a:1, hard:true, e:"CNAME — псевдоним: резолвер следует по цепочке и возвращает A-запись конечного (канонического) имени." },
+    { q:"Зачем в TTL иногда ставят очень маленькое значение (например, 60)?", opts:["Экономия трафика","Быстрое распространение изменений ценой нагрузки","Безопасность","Так требует стандарт"], a:1, hard:true, e:"Малый TTL заставляет кэши быстро обновляться — удобно при частых сменах, но повышает нагрузку на авторитетные серверы." }
+  ],
+
+  glossary: [
+    ["DNS", "Domain Name System — распределённая система перевода имён в IP и обратно."],
+    ["Stub-резолвер", "Минимальный клиент в ОС: спрашивает рекурсивный резолвер и ждёт ответ."],
+    ["Рекурсивный резолвер", "Сервер, который сам обходит иерархию (root→TLD→авторитетный) и возвращает готовый ответ."],
+    ["Итеративный запрос", "Каждый сервер отвечает referral'ом «спроси следующих», а не готовым ответом."],
+    ["Referral", "Ответ с NS-записями следующего уровня иерархии вместо адреса."],
+    ["Корневой сервер", "Вершина иерархии; знает, кто отвечает за каждый TLD."],
+    ["TLD", "Top-Level Domain — домен верхнего уровня (.com, .ru, .org)."],
+    ["Авторитетный сервер", "Хранит настоящие записи зоны и выдаёт финальный ответ."],
+    ["Зона", "Часть пространства имён под управлением одного администратора (например, example.com)."],
+    ["A / AAAA", "Записи с IPv4 / IPv6 адресом имени."],
+    ["CNAME", "Каноническое имя: псевдоним, ссылающийся на другое имя."],
+    ["MX", "Mail eXchange — почтовый сервер домена с приоритетом."],
+    ["NS", "Name Server — авторитетный сервер зоны."],
+    ["TTL", "Time To Live — сколько секунд запись можно держать в кэше."],
+    ["NXDOMAIN", "Ответ «имя не существует»; тоже кэшируется (отрицательное кэширование)."]
+  ],
+
+  terminal: {
+    title: "you@workstation — sandbox dig",
+    prompt: "$",
+    greeting: "Песочница DNS (эмуляция dig/nslookup/host). Наберите help или жмите быстрые команды ниже.",
+    hint: "Известные имена: example.com, www.example.com, mail.example.com. Стрелки ↑/↓ — история.",
+    notFound: "команда недоступна в песочнице: ",
+    help: [
+      "Песочница DNS — эмуляция dig / nslookup / host. Команды:",
+      "  dig <имя> [тип]     запрос; типы A, AAAA, MX, NS, TXT (по умолчанию A)",
+      "  dig +short <имя>    только значение ответа",
+      "  dig +trace <имя>    путь по иерархии: root -> TLD -> авторитетный",
+      "  nslookup <имя>      простой резолвинг",
+      "  host <имя>          однострочный ответ",
+      "  clear               очистить экран",
+      "  help                эта справка",
+      "",
+      "Известные имена: example.com, www.example.com, mail.example.com"
+    ].join("\n"),
+    quick: ["dig example.com", "dig example.com MX", "dig example.com NS", "dig +trace www.example.com", "dig +short example.com", "help"],
+    missions: [
+      { id:"a",     text:"Узнать IP-адрес: <code>dig example.com</code>" },
+      { id:"mx",    text:"Найти почтовый сервер: <code>dig example.com MX</code>" },
+      { id:"ns",    text:"Авторитетные серверы: <code>dig example.com NS</code>" },
+      { id:"trace", text:"Пройти иерархию: <code>dig +trace www.example.com</code>" },
+      { id:"short", text:"Краткий ответ: <code>dig +short example.com</code>" }
+    ],
+    zone: {
+      "example.com":      { A:["93.184.216.34"], AAAA:["2606:2800:220:1::248:1893"], MX:["10 mail.example.com."], NS:["ns1.example.com.", "ns2.example.com."], TXT:["\"v=spf1 include:_spf.example.com ~all\""] },
+      "www.example.com":  { CNAME:["example.com."] },
+      "mail.example.com": { A:["93.184.216.35"] }
+    },
+    rr: function (name, type, val) { var n = name.replace(/\.$/, "") + "."; return { line: n + "\t3600\tIN\t" + type + "\t" + val, val: val }; },
+    resolve: function (name, type) {
+      var z = this.zone, rec = z[name], ans = [], self = this;
+      if (rec && rec.CNAME && (type === "A" || type === "AAAA")) {
+        ans.push(this.rr(name, "CNAME", rec.CNAME[0]));
+        var tgt = rec.CNAME[0].replace(/\.$/, ""), t2 = z[tgt];
+        if (t2 && t2[type]) t2[type].forEach(function (v) { ans.push(self.rr(tgt, type, v)); });
+      } else if (rec && rec[type]) {
+        rec[type].forEach(function (v) { ans.push(self.rr(name, type, v)); });
+      }
+      return ans;
+    },
+    digFull: function (name, type, ans) {
+      var s = "; <<>> DiG 9.18.1 <<>> " + name + (type !== "A" ? " " + type : "") + "\n";
+      s += ";; global options: +cmd\n;; Got answer:\n";
+      s += ";; ->>HEADER<<- opcode: QUERY, status: " + (ans.length ? "NOERROR" : "NXDOMAIN") + ", id: " + (10000 + Math.floor(Math.random() * 50000)) + "\n";
+      s += ";; flags: qr rd ra; QUERY: 1, ANSWER: " + ans.length + "\n\n";
+      s += ";; QUESTION SECTION:\n;" + name + ".\t\tIN\t" + type + "\n";
+      if (ans.length) s += "\n;; ANSWER SECTION:\n" + ans.map(function (a) { return a.line; }).join("\n") + "\n";
+      s += "\n;; Query time: " + (8 + Math.floor(Math.random() * 40)) + " msec\n;; SERVER: 8.8.8.8#53(8.8.8.8)";
+      return s;
+    },
+    traceText: function (name) {
+      return "; <<>> DiG 9.18.1 <<>> +trace " + name + "\n\n" +
+        ".\t\t518400\tIN\tNS\ta.root-servers.net.\n;; получено от 198.41.0.4 (корневой сервер)\n\n" +
+        "com.\t\t172800\tIN\tNS\ta.gtld-servers.net.\n;; получено от a.root-servers.net (сервер TLD .com)\n\n" +
+        "example.com.\t172800\tIN\tNS\tns1.example.com.\n;; получено от a.gtld-servers.net (делегирование зоны)\n\n" +
+        "www.example.com.\t3600\tIN\tCNAME\texample.com.\nexample.com.\t3600\tIN\tA\t93.184.216.34\n;; получено от ns1.example.com (авторитетный ответ)";
+    },
+    commands: [
+      { name: "dig", run: function (args, ctx) {
+        var T = ctx.cfg;
+        var flags = args.filter(function (a) { return a.charAt(0) === "+"; }).map(function (a) { return a.toLowerCase(); });
+        var pos = args.filter(function (a) { return a.charAt(0) !== "+"; });
+        var name = (pos[0] || "").replace(/\.$/, ""), type = (pos[1] || "A").toUpperCase();
+        if (!name) { ctx.error("dig: укажите имя, например: dig example.com"); return; }
+        if (flags.indexOf("+trace") >= 0) { ctx.out(T.traceText(name)); ctx.note("Тот же путь, что в симуляторе: корень → .com → авторитетный сервер зоны."); ctx.complete("trace"); return; }
+        var ans = T.resolve(name, type);
+        if (flags.indexOf("+short") >= 0) {
+          if (!ans.length) { ctx.muted(";; нет записи " + type + " для " + name); return; }
+          ctx.out(ans.map(function (a) { return a.val; }).join("\n")); ctx.complete("short"); return;
+        }
+        ctx.out(T.digFull(name, type, ans));
+        if (ans.length) {
+          ctx.note("Резолвер обошёл иерархию и вернул запись " + type + ". Полный путь — в «dig +trace».");
+          if (type === "A") ctx.complete("a");
+          if (type === "MX") ctx.complete("mx");
+          if (type === "NS") ctx.complete("ns");
+        }
+      } },
+      { name: "nslookup", run: function (args, ctx) {
+        var z = ctx.cfg.zone, name = (args[0] || "").replace(/\.$/, "");
+        if (!name) { ctx.error("nslookup: укажите имя"); return; }
+        var out = "Server:\t\t8.8.8.8\nAddress:\t8.8.8.8#53\n\n", rec = z[name], a = rec && rec.A;
+        if (rec && rec.CNAME) { out += name + "\tcanonical name = " + rec.CNAME[0] + "\n"; var t = z[rec.CNAME[0].replace(/\.$/, "")]; a = t && t.A; name = rec.CNAME[0].replace(/\.$/, ""); }
+        if (a) { ctx.out(out + "Name:\t" + name + "\nAddress: " + a[0]); ctx.complete("a"); }
+        else { ctx.out(out + "** server can't find " + name + ": NXDOMAIN"); }
+      } },
+      { name: "host", run: function (args, ctx) {
+        var z = ctx.cfg.zone, name = (args[0] || "").replace(/\.$/, "");
+        if (!name) { ctx.error("host: укажите имя"); return; }
+        var rec = z[name];
+        if (rec && rec.CNAME) { ctx.out(name + " is an alias for " + rec.CNAME[0]); var t = z[rec.CNAME[0].replace(/\.$/, "")]; if (t && t.A) ctx.out(rec.CNAME[0].replace(/\.$/, "") + " has address " + t.A[0]); ctx.complete("a"); return; }
+        if (rec && rec.A) { rec.A.forEach(function (v) { ctx.out(name + " has address " + v); }); if (rec.MX) rec.MX.forEach(function (v) { ctx.out(name + " mail is handled by " + v); }); ctx.complete("a"); return; }
+        ctx.out("Host " + name + " not found: 3(NXDOMAIN)");
+      } },
+      { name: "help", run: function (args, ctx) { ctx.out(ctx.helpText); } },
+      { name: "clear", run: function (args, ctx) { ctx.clear(); } }
+    ]
+  }
+};
+
+/* =========================================================================
+   ДВИЖОК. Ниже — рендер из COURSE. Обычно менять не нужно.
+   ========================================================================= */
+(function () {
+  "use strict";
+  var C = COURSE, root = document.documentElement;
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var esc = function (s) { return String(s).replace(/[&<>]/g, function (c) { return { "&":"&amp;","<":"&lt;",">":"&gt;" }[c]; }); };
+
+  if (C.meta.accent) {
+    root.style.setProperty("--accent", C.meta.accent);
+    root.style.setProperty("--accent-2", C.meta.accent);
+    root.style.setProperty("--accent-soft", C.meta.accent + "22");
+  }
+  document.title = C.meta.title + " — LearningPlatform";
+  var _dt = document.getElementById("docTitle"); if (_dt) _dt.textContent = document.title;
+  var _fn = document.getElementById("footNote"); if (_fn) _fn.textContent = C.meta.title;
+  document.getElementById("brand").innerHTML =
+    '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round"><path d="M3 6l9-3 9 3-9 3-9-3Z"/><path d="M21 6v6"/><path d="M6 8.5V13c0 1.7 2.7 3 6 3s6-1.3 6-3V8.5"/></svg>' + esc(C.meta.title);
+
+  var dots = function (n, cls) { var s = ""; for (var i = 0; i < 5; i++) s += '<i class="' + (i < n ? "on" : "") + '"></i>'; return '<span class="' + cls + '">' + s + '</span>'; };
+  var levelById = {}; C.levels.forEach(function (l) { levelById[l.id] = l; });
+
+  /* nav */
+  var secByLevel = {}; C.levels.forEach(function (l) { secByLevel[l.id] = []; });
+  C.sections.forEach(function (s) { if (secByLevel[s.level]) secByLevel[s.level].push(s.id); });
+  document.getElementById("navlinks").innerHTML = C.levels.map(function (l) {
+    return '<a href="#' + l.id + '" data-sec="' + secByLevel[l.id].join(" ") + '">' + esc(l.tag.replace("Уровень ", "")) + " · " + esc(l.title.split(":")[0]) + '</a>';
+  }).join("");
+
+  /* hero */
+  document.getElementById("hero").innerHTML =
+    '<div class="hero"><div class="wrap">' +
+      '<div class="eyebrow">' + esc(C.meta.kicker || "") + '</div>' +
+      '<h1>' + esc(C.meta.title) + '<span class="sub">' + esc(C.meta.subtitle || "") + '</span></h1>' +
+      '<div class="hero-cta">' +
+        '<a href="#' + C.levels[0].id + '" class="btn primary">Начать курс' +
+          '<svg viewBox="0 0 24 24" width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14M13 6l6 6-6 6"/></svg></a>' +
+        (hasType("exam") ? '<a href="#exam" class="btn ghost">Сразу к экзамену</a>' : '') +
+      '</div></div></div>';
+
+  function hasType(t) { return C.sections.some(function (s) { return s.type === t; }); }
+
+  /* path */
+  var pathHTML = '<div class="path"><div class="wrap"><div class="plead">Маршрут курса</div><div class="path-grid">' +
+    C.levels.map(function (l) {
+      return '<a class="path-card" href="#' + l.id + '"><span class="pnum">' + esc(l.tag) + '</span>' +
+        '<span class="pt">' + esc(l.title.split(":")[0]) + '</span>' + dots(l.dots || 1, "pdots") +
+        '<span class="pd">' + esc(l.desc || "") + '</span></a>';
+    }).join("") + '</div></div></div>';
+
+  /* sections */
+  var main = document.getElementById("main"), html = pathHTML, curLevel = null;
+  C.sections.forEach(function (s) {
+    if (s.level !== curLevel) {
+      var l = levelById[s.level];
+      if (l) html += '<div class="level" id="' + l.id + '"><div class="wrap">' +
+        '<div class="level-meta"><span class="level-tag">' + esc(l.tag) + '</span>' + dots(l.dots || 1, "level-dots") +
+        '<span class="level-diff">' + esc(l.diff || "") + '</span></div>' +
+        '<h2 class="level-title">' + esc(l.title) + '</h2><p class="level-desc">' + esc(l.desc || "") + '</p></div></div>';
+      curLevel = s.level;
+    }
+    html += renderSection(s);
+  });
+  main.innerHTML = html;
+
+  function sectionHead(s) {
+    return (s.label ? '<div class="sec-label">' + esc(s.label) + '</div>' : "") +
+      '<h2>' + esc(s.title) + '</h2>' + (s.intro ? '<p class="sec-intro">' + esc(s.intro) + '</p>' : "");
+  }
+  function renderSection(s) {
+    if (s.type === "simulator") return '<section id="' + s.id + '"><div class="wrap">' + sectionHead(s) + simMarkup() + '</div></section>';
+    if (s.type === "quiz")      return '<section id="' + s.id + '"><div class="wrap">' + sectionHead(s) + '<div class="quiz" id="quizWrap"></div><div class="quizscore" id="quizScore"></div></div></section>';
+    if (s.type === "flashcards")return '<section id="' + s.id + '"><div class="wrap">' + sectionHead(s) + deckMarkup() + '</div></section>';
+    if (s.type === "exam")      return '<section id="' + s.id + '"><div class="wrap">' + sectionHead(s) + examMarkup() + '</div></section>';
+    if (s.type === "terminal")  return '<section id="' + s.id + '"><div class="wrap">' + sectionHead(s) + terminalMarkup(C.terminal) + '</div></section>';
+    if (s.type === "glossary")  return '<section id="' + s.id + '" class="glossary"><div class="wrap">' + sectionHead(s) + '<dl id="glossaryDl"></dl></div></section>';
+    return '<section id="' + s.id + '"><div class="wrap">' + sectionHead(s) + '<div class="blocks">' + (s.blocks || []).map(renderBlock).join("") + '</div></div></section>';
+  }
+
+  function renderBlock(b) {
+    if (b.t === "prose")   return '<div class="b-prose">' + b.html + '</div>';
+    if (b.t === "cards")   return '<div class="grid">' + b.items.map(function (c) {
+      return '<div class="card">' + (c.ic ? '<div class="ic">' + esc(c.ic) + '</div>' : "") + '<h3>' + esc(c.title) + '</h3><p>' + c.body + '</p></div>';
+    }).join("") + '</div>';
+    if (b.t === "compare") {
+      var col = function (o, cls) { return '<div class="col ' + cls + '"><h4>' + esc(o.title) + '</h4><ul>' + o.items.map(function (i) { return '<li>' + i + '</li>'; }).join("") + '</ul></div>'; };
+      return '<div class="compare">' + col(b.bad, "bad") + col(b.good, "good") + '</div>';
+    }
+    if (b.t === "table")   return '<div class="tablewrap"><table><thead><tr>' + b.head.map(function (h) { return '<th>' + esc(h) + '</th>'; }).join("") +
+      '</tr></thead><tbody>' + b.rows.map(function (r) { return '<tr>' + r.map(function (c) { return '<td>' + c + '</td>'; }).join("") + '</tr>'; }).join("") + '</tbody></table></div>';
+    if (b.t === "accordion") return '<div class="accordion">' + b.items.map(function (it) {
+      return '<details><summary>' + esc(it.q) + '<svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></summary><div class="abody">' + it.a + '</div></details>';
+    }).join("") + '</div>';
+    if (b.t === "callout") return '<div class="callout"><h3>' + esc(b.title) + '</h3><p>' + b.html + '</p></div>';
+    if (b.t === "code")    return '<div class="code">' + esc(b.text) + '</div>';
+    if (b.t === "steps")   return '<ol class="steps">' + b.items.map(function (it, i) { return '<li><span class="n">' + (i + 1) + '.</span><span>' + it + '</span></li>'; }).join("") + '</ol>';
+    return "";
+  }
+
+  /* ---------- СИМУЛЯТОР ---------- */
+  function simMarkup() {
+    return '<div class="sim"><div class="actors" id="simActors"></div>' +
+      '<div class="flowmap"><svg id="simSvg" viewBox="0 0 600 66" preserveAspectRatio="xMidYMid meet" aria-hidden="true"></svg></div>' +
+      '<div class="stepbar"><button class="navbtn" id="simPrev" aria-label="Назад"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>' +
+      '<div class="steps-dots" id="simDots"></div>' +
+      '<button class="navbtn" id="simNext" aria-label="Вперёд"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></button></div>' +
+      '<div class="detail"><div class="dpanel" id="simPanel"></div><div class="envelope" id="simEnv"></div></div></div>';
+  }
+  function initSim() {
+    var sim = C.simulator; if (!sim || !document.getElementById("simActors")) return;
+    var actors = sim.actors, steps = sim.steps, N = actors.length, idx = {};
+    actors.forEach(function (a, i) { idx[a.id] = i; });
+    var actorsEl = document.getElementById("simActors");
+    actorsEl.style.gridTemplateColumns = "repeat(" + N + ", 1fr)";
+    if (window.matchMedia("(max-width:760px)").matches) actorsEl.style.gridTemplateColumns = "1fr";
+    actorsEl.innerHTML = actors.map(function (a) {
+      return '<div class="actor" data-a="' + a.id + '"><div class="aname">' + esc(a.name) + '</div><div class="arole">' + esc(a.role || "") + '</div></div>';
+    }).join("");
+
+    var svg = document.getElementById("simSvg"), NY = 24;
+    function nodeX(i) { return N < 2 ? 300 : 40 + i * (520 / (N - 1)); }
+    function buildMap() {
+      var s = '<line class="lane" x1="' + nodeX(0) + '" y1="' + NY + '" x2="' + nodeX(N - 1) + '" y2="' + NY + '"/>';
+      actors.forEach(function (a, i) {
+        s += '<circle class="node" data-node="' + a.id + '" cx="' + nodeX(i) + '" cy="' + NY + '" r="8"/>';
+        s += '<text class="nlabel" x="' + nodeX(i) + '" y="' + (NY + 28) + '" text-anchor="middle">' + esc(a.name) + '</text>';
+      });
+      s += '<line class="msgline" id="simMsg" x1="0" y1="' + NY + '" x2="0" y2="' + NY + '" style="opacity:0"/>';
+      s += '<polygon class="arrow" id="simArr" points="0,0 0,0 0,0" style="opacity:0"/>';
+      s += '<circle class="dot" id="simDotM" cx="0" cy="' + NY + '" r="5" style="opacity:0"/>';
+      svg.innerHTML = s;
+    }
+    buildMap();
+
+    var dotsEl = document.getElementById("simDots");
+    dotsEl.innerHTML = steps.map(function (st, i) { return '<button class="sdot" data-i="' + i + '" aria-label="Шаг ' + (i + 1) + '">' + (i + 1) + '</button>'; }).join("");
+    var panel = document.getElementById("simPanel"), env = document.getElementById("simEnv");
+    var prev = document.getElementById("simPrev"), next = document.getElementById("simNext");
+    var anim = null, cur = 0;
+
+    function animate(st) {
+      var fi = idx[st.from], ti = idx[st.to], fx = nodeX(fi), tx = nodeX(ti), dir = tx > fx ? 1 : -1;
+      var line = document.getElementById("simMsg"), arr = document.getElementById("simArr"), dot = document.getElementById("simDotM");
+      line.setAttribute("x1", fx); line.setAttribute("x2", tx); line.style.opacity = "1";
+      var ax = tx - dir * 11, w = 7;
+      arr.setAttribute("points", (dir > 0 ? [ax, NY, ax - w, NY - 5, ax - w, NY + 5] : [ax, NY, ax + w, NY + 5, ax + w, NY - 5]).join(" "));
+      arr.style.opacity = "1";
+      svg.querySelectorAll(".node").forEach(function (n) { n.classList.toggle("hot", n.getAttribute("data-node") === st.from || n.getAttribute("data-node") === st.to); });
+      if (anim) { clearInterval(anim); anim = null; }
+      if (reduce) { dot.style.opacity = "0"; return; }
+      dot.style.opacity = "1"; var t = 0;
+      anim = setInterval(function () { t += 0.045; if (t >= 1) { t = 1; clearInterval(anim); anim = null; dot.style.opacity = "0"; } dot.setAttribute("cx", fx + (tx - fx) * t); }, 16);
+    }
+    function render() {
+      var st = steps[cur];
+      panel.innerHTML = '<div class="dhead"><span class="msgname">' + (cur + 1) + ' · ' + esc(st.name) + '</span><span class="dir">' + esc(st.dir || "") + '</span></div>' +
+        '<h3>' + esc(st.title) + '</h3><div class="what">' + st.what + '</div>' + (st.result ? '<div class="result">' + st.result + '</div>' : "");
+      env.innerHTML = '<div class="etitle">Содержимое: ' + esc(st.name) + '</div>' + (st.fields || []).map(function (f) {
+        var tone = f.tone ? " enc tone-" + f.tone : "";
+        var badge = f.badge ? '<span class="badge ' + (f.tone ? "tone-" + f.tone : "") + '">' + esc(f.badge) + '</span>' : "";
+        return '<div class="field' + tone + '"><div class="frow"><span class="flabel">' + esc(f.label) + '</span>' + badge + '</div><div class="fbody">' + f.body + '</div></div>';
+      }).join("");
+      actorsEl.querySelectorAll(".actor").forEach(function (el) { el.classList.toggle("hot", el.getAttribute("data-a") === st.from || el.getAttribute("data-a") === st.to); });
+      dotsEl.querySelectorAll(".sdot").forEach(function (d, i) { d.classList.toggle("active", i === cur); d.classList.toggle("done", i < cur); });
+      prev.disabled = cur === 0; next.disabled = cur === steps.length - 1;
+      animate(st);
+    }
+    function go(i) { cur = Math.max(0, Math.min(steps.length - 1, i)); render(); }
+    prev.addEventListener("click", function () { go(cur - 1); });
+    next.addEventListener("click", function () { go(cur + 1); });
+    dotsEl.addEventListener("click", function (e) { var b = e.target.closest(".sdot"); if (b) go(+b.getAttribute("data-i")); });
+    document.getElementById("sim").addEventListener("keydown", function (e) { if (e.key === "ArrowRight") go(cur + 1); if (e.key === "ArrowLeft") go(cur - 1); });
+    render();
+  }
+
+  /* ---------- КВИЗ ---------- */
+  function initQuiz() {
+    var wrap = document.getElementById("quizWrap"); if (!wrap || !C.quiz) return;
+    var scoreEl = document.getElementById("quizScore"), answered = 0, correct = 0, total = C.quiz.length;
+    wrap.innerHTML = C.quiz.map(function (q, qi) {
+      var opts = q.opts.map(function (o, oi) { return '<button class="opt" data-q="' + qi + '" data-o="' + oi + '"><span class="mark">' + String.fromCharCode(65 + oi) + '</span><span>' + esc(o) + '</span></button>'; }).join("");
+      return '<div class="q"><div class="qn">Вопрос ' + (qi + 1) + '</div><div class="qq">' + esc(q.q) + '</div><div class="opts">' + opts + '</div><div class="explain" id="qex' + qi + '"></div></div>';
+    }).join("");
+    scoreEl.innerHTML = "Отвечено: <b>0</b> из " + total + " · Верно: <b>0</b>";
+    wrap.addEventListener("click", function (e) {
+      var b = e.target.closest(".opt"); if (!b) return;
+      var qi = +b.getAttribute("data-q"), oi = +b.getAttribute("data-o"), q = C.quiz[qi], box = b.closest(".q");
+      if (box.dataset.done) return; box.dataset.done = "1"; answered++;
+      var right = oi === q.a; if (right) correct++;
+      box.querySelectorAll(".opt").forEach(function (btn) { var i = +btn.getAttribute("data-o"); btn.disabled = true; if (i === q.a) btn.classList.add("correct"); else if (i === oi) btn.classList.add("wrong"); });
+      var ex = document.getElementById("qex" + qi);
+      ex.innerHTML = (right ? "<b style='color:var(--ok)'>Верно. </b>" : "<b style='color:var(--danger)'>Не совсем. </b>") + q.e; ex.classList.add("show");
+      scoreEl.innerHTML = "Отвечено: <b>" + answered + "</b> из " + total + " · Верно: <b>" + correct + "</b>";
+    });
+  }
+
+  /* ---------- КАРТОЧКИ ---------- */
+  function deckMarkup() {
+    return '<div class="deck"><div class="deck-meta" id="deckMeta"></div>' +
+      '<div class="fcard" id="fcard" tabindex="0" role="button" aria-label="Карточка — нажмите, чтобы перевернуть"><div class="fcard-inner">' +
+      '<div class="fcard-face fcard-front"><span class="ftag">вопрос</span><div class="fq" id="fq"></div><span class="hint">нажмите, чтобы перевернуть</span></div>' +
+      '<div class="fcard-face fcard-back"><span class="ftag">ответ</span><div class="fa" id="fa"></div><span class="hint">нажмите, чтобы вернуть</span></div></div></div>' +
+      '<div class="deck-controls" id="deckControls"><button class="btn ghost" id="againBtn">↺ Повторить позже</button><button class="btn primary" id="knowBtn">✓ Знаю</button></div>' +
+      '<div class="deck-done" id="deckDone"></div></div>';
+  }
+  function initDeck() {
+    var fcard = document.getElementById("fcard"); if (!fcard || !C.flashcards) return;
+    var D = C.flashcards, fq = document.getElementById("fq"), fa = document.getElementById("fa");
+    var meta = document.getElementById("deckMeta"), controls = document.getElementById("deckControls"), done = document.getElementById("deckDone");
+    var total = D.length, queue = [], known = 0;
+    function reset() { queue = D.map(function (_, i) { return i; }); known = 0; }
+    reset();
+    function render() {
+      if (queue.length === 0) { finish(); return; }
+      fq.textContent = D[queue[0]].q; fa.textContent = D[queue[0]].a; fcard.classList.remove("flipped");
+      meta.innerHTML = "Осталось: <b>" + queue.length + "</b> из " + total + " · выучено: <b>" + known + "</b>";
+    }
+    function finish() {
+      fcard.style.display = "none"; controls.style.display = "none"; meta.style.display = "none"; done.classList.add("show");
+      done.innerHTML = '<div class="big">🎉 Колода пройдена!</div><p style="color:var(--text-dim);font-size:14.5px;margin-bottom:16px">Вы прогнали все ' + total + ' карточек.</p><button class="btn primary" id="deckRestart">Пройти заново</button>';
+      document.getElementById("deckRestart").addEventListener("click", function () { reset(); fcard.style.display = ""; controls.style.display = ""; meta.style.display = ""; done.classList.remove("show"); render(); });
+    }
+    fcard.addEventListener("click", function () { fcard.classList.toggle("flipped"); });
+    fcard.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); fcard.classList.toggle("flipped"); } });
+    document.getElementById("knowBtn").addEventListener("click", function () { queue.shift(); known++; render(); });
+    document.getElementById("againBtn").addEventListener("click", function () { if (queue.length > 1) queue.push(queue.shift()); render(); });
+    render();
+  }
+
+  /* ---------- ЭКЗАМЕН ---------- */
+  function examMarkup() {
+    return '<div id="examStart"><div class="card" style="text-align:center;max-width:560px;margin:0 auto">' +
+      '<h3 style="margin-bottom:8px">Готовы проверить себя?</h3><p style="color:var(--text-dim);font-size:14.5px;margin-bottom:18px">Неотвеченные вопросы засчитываются как неверные.</p>' +
+      '<button class="btn primary" id="examBegin">Начать экзамен</button></div></div>' +
+      '<div id="examBody" style="display:none"><div class="exam-bar"><span class="exam-timer" id="examTimer">⏱ <b>00:00</b></span>' +
+      '<span class="exam-prog" id="examProg"></span><button class="btn primary" id="examSubmit">Завершить экзамен</button></div>' +
+      '<div id="examResult"></div><div class="quiz" id="examQuestions"></div>' +
+      '<div style="text-align:center;margin-top:22px"><button class="btn ghost" id="examRetake" style="display:none">Пересдать заново</button></div></div>';
+  }
+  function initExam() {
+    var beginBtn = document.getElementById("examBegin"); if (!beginBtn || !C.exam) return;
+    var E = C.exam, startEl = document.getElementById("examStart"), bodyEl = document.getElementById("examBody");
+    var qEl = document.getElementById("examQuestions"), resEl = document.getElementById("examResult");
+    var timerEl = document.getElementById("examTimer"), progEl = document.getElementById("examProg");
+    var submitBtn = document.getElementById("examSubmit"), retakeBtn = document.getElementById("examRetake");
+    var answers = {}, graded = false, t0 = 0, timer = null;
+    function pad(n) { return (n < 10 ? "0" : "") + n; }
+    function fmt(s) { return pad(Math.floor(s / 60)) + ":" + pad(s % 60); }
+    function prog() { progEl.textContent = "отвечено " + Object.keys(answers).length + " / " + E.length; }
+    function renderQ() {
+      qEl.innerHTML = E.map(function (q, qi) {
+        var opts = q.opts.map(function (o, oi) { return '<button class="exopt" data-q="' + qi + '" data-o="' + oi + '"><span class="mk">' + String.fromCharCode(65 + oi) + '</span><span>' + esc(o) + '</span></button>'; }).join("");
+        var tag = q.hard ? ' <span class="pill danger" style="margin-left:8px">продвинутый</span>' : '';
+        return '<div class="exq" data-qi="' + qi + '"><div class="exn">Вопрос ' + (qi + 1) + ' из ' + E.length + tag + '</div><div class="qq">' + esc(q.q) + '</div><div class="exopts">' + opts + '</div><div class="exex" id="exex' + qi + '"></div></div>';
+      }).join("");
+    }
+    qEl.addEventListener("click", function (e) {
+      if (graded) return; var b = e.target.closest(".exopt"); if (!b) return;
+      var qi = +b.getAttribute("data-q"), oi = +b.getAttribute("data-o"); answers[qi] = oi;
+      b.closest(".exq").querySelectorAll(".exopt").forEach(function (o) { o.classList.toggle("sel", +o.getAttribute("data-o") === oi); });
+      prog();
+    });
+    function begin() {
+      answers = {}; graded = false; startEl.style.display = "none"; bodyEl.style.display = "";
+      resEl.innerHTML = ""; retakeBtn.style.display = "none"; submitBtn.disabled = false; renderQ(); prog();
+      t0 = Date.now(); timer = setInterval(function () { timerEl.innerHTML = "⏱ <b>" + fmt(Math.floor((Date.now() - t0) / 1000)) + "</b>"; }, 1000);
+      bodyEl.scrollIntoView({ behavior: "smooth", block: "start" });
+    }
+    function grade() {
+      if (graded) return; graded = true; if (timer) { clearInterval(timer); timer = null; }
+      var elapsed = Math.floor((Date.now() - t0) / 1000), correct = 0;
+      E.forEach(function (q, qi) {
+        var pick = answers[qi]; if (pick === q.a) correct++;
+        var box = qEl.querySelector('.exq[data-qi="' + qi + '"]');
+        box.querySelectorAll(".exopt").forEach(function (o) { var oi = +o.getAttribute("data-o"); o.disabled = true; o.classList.remove("sel"); if (oi === q.a) o.classList.add("correct"); else if (oi === pick) o.classList.add("wrongpick"); });
+        if (pick !== q.a) { var ex = document.getElementById("exex" + qi); ex.innerHTML = (pick === undefined ? "<b style='color:var(--danger)'>Без ответа. </b>" : "<b style='color:var(--danger)'>Неверно. </b>") + q.e; ex.classList.add("show"); }
+      });
+      var pct = Math.round(correct / E.length * 100), pass = pct >= 70;
+      resEl.innerHTML = '<div class="exam-result ' + (pass ? "pass" : "fail") + '"><div class="big">' + pct + '%</div><div class="badge2">' + (pass ? "✓ Сдано" : "✗ Не сдано") + '</div>' +
+        '<div class="sub">Верно ' + correct + ' из ' + E.length + ' · время ' + fmt(elapsed) + (pass ? ' · отличный результат!' : ' · нужно 70% — перечитайте разбор ниже.') + '</div></div>';
+      submitBtn.disabled = true; retakeBtn.style.display = ""; resEl.scrollIntoView({ behavior: "smooth", block: "center" });
+    }
+    beginBtn.addEventListener("click", begin);
+    submitBtn.addEventListener("click", grade);
+    retakeBtn.addEventListener("click", function () { startEl.style.display = ""; bodyEl.style.display = "none"; startEl.scrollIntoView({ behavior: "smooth", block: "center" }); });
+  }
+
+  /* ---------- ГЛОССАРИЙ ---------- */
+  function initGlossary() {
+    var dl = document.getElementById("glossaryDl"); if (!dl || !C.glossary) return;
+    dl.innerHTML = C.glossary.map(function (g) { return '<dt>' + esc(g[0]) + '</dt><dd>' + esc(g[1]) + '</dd>'; }).join("");
+  }
+
+  /* ---------- ТЕРМИНАЛ-ТРЕНАЖЁР ---------- */
+  function terminalMarkup(T) {
+    T = T || {};
+    return '<div class="lab"><div class="term">' +
+      '<div class="term-bar"><span class="dots"><i></i><i></i><i></i></span>' +
+      '<span class="term-title">' + esc(T.title || "sandbox") + '</span>' +
+      '<button class="term-reset" id="termReset">сброс</button></div>' +
+      '<div class="term-body" id="termBody" tabindex="0"></div>' +
+      '<div class="term-input"><span class="ps1" id="termPs1">' + esc(T.prompt || "$") + '</span>' +
+      '<input id="termInput" type="text" autocomplete="off" autocapitalize="off" autocorrect="off" spellcheck="false" aria-label="Ввод команды"></div></div>' +
+      '<aside class="missions"><h3>Задания</h3><ul id="termMissions"></ul>' +
+      '<div class="mission-hint">' + (T.hint || "Наберите help, чтобы увидеть команды.") + '</div>' +
+      '<div class="mission-done" id="termDone">' + (T.doneText || "🎉 Все задания выполнены!") + '</div></aside></div>' +
+      '<div class="quickcmds" id="termQuick"></div>';
+  }
+  function initTerminal(T) {
+    var body = document.getElementById("termBody"); if (!T || !body) return;
+    var input = document.getElementById("termInput"), ps1 = document.getElementById("termPs1");
+    var missionsEl = document.getElementById("termMissions"), doneBox = document.getElementById("termDone"), quick = document.getElementById("termQuick");
+    var missions = T.missions || [], done = {}, history = [], hi = 0, pending = null, defPrompt = T.prompt || "$";
+    var cmds = {}; (T.commands || []).forEach(function (c) { cmds[c.name] = c; });
+
+    function put(text, cls) { var d = document.createElement("div"); if (cls) d.className = cls; d.textContent = text; body.appendChild(d); body.scrollTop = body.scrollHeight; }
+    function putHTML(h, cls) { var d = document.createElement("div"); if (cls) d.className = cls; d.innerHTML = h; body.appendChild(d); body.scrollTop = body.scrollHeight; }
+    function renderM() {
+      missionsEl.innerHTML = missions.map(function (m) { var d = done[m.id]; return '<li class="' + (d ? "done" : "") + '"><span class="box">' + (d ? "✓" : "") + '</span><span>' + m.text + '</span></li>'; }).join("");
+      doneBox.classList.toggle("show", missions.length > 0 && missions.every(function (m) { return done[m.id]; }));
+    }
+    renderM();
+
+    var ctx = {
+      cfg: T, state: {}, helpText: T.help || "",
+      print: put, printHTML: putHTML,
+      out: function (t) { put(t, "out"); },
+      note: function (t) { put("↳ " + t, "note"); },
+      muted: function (t) { put(t, "muted"); },
+      error: function (t) { put(t, "err"); },
+      clear: function () { body.innerHTML = ""; },
+      complete: function (id) { if (!done[id]) { done[id] = true; renderM(); } },
+      ask: function (label, opts, cb) { pending = { cb: cb, label: label, mask: !!(opts && opts.mask) }; ps1.textContent = label; if (pending.mask) input.type = "password"; }
+    };
+
+    function run(raw) {
+      putHTML('<span class="ps">' + esc(T.prompt || "$") + '</span> ' + esc(raw), "cmd-echo");
+      var line = raw.trim(); if (line === "") return;
+      var tk = line.split(/\s+/), name = tk[0];
+      ctx.argsRaw = line.slice(name.length).trim();
+      var c = cmds[name];
+      if (c) { try { c.run(tk.slice(1), ctx); } catch (e) { ctx.error("ошибка: " + e.message); } }
+      else if (name === "clear") { ctx.clear(); }
+      else if (name === "help") { put(ctx.helpText, "out"); }
+      else { ctx.error((T.notFound || "команда не найдена: ") + name); }
+    }
+    function submit() {
+      var v = input.value; input.value = "";
+      if (pending) {
+        var p = pending; pending = null;
+        putHTML('<span class="ps">' + esc(p.label) + '</span> ' + (p.mask ? "•".repeat(Math.min(v.length, 8) || 4) : esc(v)), "muted");
+        ps1.textContent = defPrompt; input.type = "text";
+        try { p.cb(v, ctx); } catch (e) { ctx.error("ошибка: " + e.message); }
+        return;
+      }
+      if (v.trim() !== "") history.push(v); hi = history.length; run(v);
+    }
+    input.addEventListener("keydown", function (e) {
+      if (e.key === "Enter") { e.preventDefault(); submit(); }
+      else if (e.key === "ArrowUp") { if (history.length && hi > 0) { hi--; input.value = history[hi]; e.preventDefault(); } }
+      else if (e.key === "ArrowDown") { if (hi < history.length - 1) { hi++; input.value = history[hi]; } else { hi = history.length; input.value = ""; } e.preventDefault(); }
+    });
+    body.addEventListener("click", function () { input.focus(); });
+
+    if ((T.quick || []).length) quick.innerHTML = T.quick.map(function (q) { return '<button class="qc" data-cmd="' + esc(q) + '">' + esc(q) + '</button>'; }).join("");
+    quick.addEventListener("click", function (e) { var b = e.target.closest(".qc"); if (!b) return; input.focus(); run(b.getAttribute("data-cmd")); });
+    document.getElementById("termReset").addEventListener("click", function () {
+      body.innerHTML = ""; done = {}; pending = null; input.type = "text"; ps1.textContent = defPrompt;
+      Object.keys(ctx.state).forEach(function (k) { delete ctx.state[k]; });
+      renderM(); if (T.onReset) T.onReset(ctx); if (T.greeting) put(T.greeting, "muted");
+    });
+    if (T.greeting) put(T.greeting, "muted");
+  }
+
+  /* ---------- ТЕМА / ПРОГРЕСС / НАВИГАЦИЯ ---------- */
+  var sun = '<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>';
+  var moon = '<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"/>';
+  function isDark() { var t = root.getAttribute("data-theme"); return t ? t === "dark" : window.matchMedia("(prefers-color-scheme: dark)").matches; }
+  function syncIcon() { document.getElementById("themeIcon").innerHTML = isDark() ? sun : moon; }
+  document.getElementById("themeBtn").addEventListener("click", function () { root.setAttribute("data-theme", isDark() ? "light" : "dark"); syncIcon(); });
+  syncIcon();
+
+  var progress = document.getElementById("progress");
+  window.addEventListener("scroll", function () { var h = document.documentElement; progress.style.width = (h.scrollTop / (h.scrollHeight - h.clientHeight) * 100) + "%"; }, { passive: true });
+
+  var links = Array.prototype.slice.call(document.querySelectorAll(".nav-links a")), secToLink = {};
+  links.forEach(function (l) { (l.getAttribute("data-sec") || "").split(/\s+/).forEach(function (id) { if (id) secToLink[id] = l; }); });
+  var obs = new IntersectionObserver(function (ents) {
+    ents.forEach(function (en) { if (en.isIntersecting) { var a = secToLink[en.target.id]; if (a) { links.forEach(function (l) { l.classList.remove("active"); }); a.classList.add("active"); } } });
+  }, { rootMargin: "-45% 0px -50% 0px" });
+  document.querySelectorAll("main section").forEach(function (s) { obs.observe(s); });
+
+  /* init interactive components */
+  initSim(); initQuiz(); initDeck(); initExam(); initGlossary(); initTerminal(C.terminal);
+})();
+</script>
+
+</body>
+</html>
