@@ -110,9 +110,12 @@
   .addbox .ic svg { width:24px; height:24px; }
   .addbox h3 { font-size:1.15rem; margin-bottom:4px; }
   .addbox p { font-size:14px; color:var(--text-dim); margin:0; max-width:62ch; }
-  .addbox .btn { margin-left:auto; background:var(--bg-2); color:var(--text); border-color:var(--border); }
-  .addbox .btn:hover { border-color:var(--border-2); }
-  @media (max-width:620px){ .addbox .btn { margin-left:0; } }
+  .addbox .actions { margin-left:auto; display:flex; align-items:center; gap:14px; flex-wrap:wrap; }
+  .addbox .btn { background:var(--accent); color:#14100a; border-color:var(--accent); }
+  .addbox .btn:hover { background:var(--accent-2); }
+  .addbox .manual { font-size:13px; color:var(--text-faint); text-decoration:none; white-space:nowrap; }
+  .addbox .manual:hover { color:var(--text-dim); }
+  @media (max-width:620px){ .addbox .actions { margin-left:0; } }
 
   footer { padding:36px 0 56px; border-top:1px solid var(--border); color:var(--text-faint); font-size:13.5px; }
   footer .wrap { display:flex; justify-content:space-between; gap:16px; flex-wrap:wrap; align-items:center; }
@@ -154,9 +157,12 @@
       <div class="ic"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.7" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5v14M5 12h14"/></svg></div>
       <div>
         <h3>Добавить свой курс</h3>
-        <p>Все курсы собраны на одном шаблоне: содержимое задаётся одним объектом <code>COURSE</code>, движок трогать не нужно. Скопируйте шаблон, замените данные — и новый курс готов в том же стиле.</p>
+        <p>Соберите курс в визуальном конструкторе — формы вместо кода: разделы, вопросы, карточки и живой предпросмотр справа. На выходе — готовый файл в том же стиле, что и остальные курсы платформы.</p>
       </div>
-      <a class="btn" href="dns.html">Открыть шаблон →</a>
+      <div class="actions">
+        <a class="manual" href="course-template.html">или редактировать вручную →</a>
+        <a class="btn" href="builder.html">Открыть конструктор →</a>
+      </div>
     </div>
   </div>
 </section>
