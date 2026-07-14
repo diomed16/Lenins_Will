@@ -217,6 +217,47 @@
   .keylegend .item { display: flex; align-items: flex-start; gap: 10px; flex: 1 1 300px; background: var(--bg-3); border: 1px solid var(--border); border-radius: 10px; padding: 12px 14px; }
   .keylegend .item .kdesc { font-size: 13px; color: var(--text-dim); margin-top: 5px; }
 
+  /* ============ КАРТА КЛЮЧЕЙ (интерактив) ============ */
+  .keymap { margin-top: 26px; background: var(--bg-2); border: 1px solid var(--border); border-radius: 16px; padding: 20px 22px; box-shadow: var(--shadow); }
+  .keymap > h3 { font-size: 1.2rem; }
+  .keymap-lanes { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 12px; }
+  .km-lane { background: var(--bg-3); border: 1px solid var(--border); border-radius: 12px; padding: 12px 8px; text-align: center; transition: border-color .25s, box-shadow .25s; }
+  .km-lane.hot { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-soft); }
+  .km-lane .kmi { width: 30px; height: 30px; border-radius: 8px; display: grid; place-items: center; margin: 0 auto 6px; background: var(--accent-soft); color: var(--accent); }
+  .km-lane .kmi svg { width: 17px; height: 17px; }
+  .km-lane .kmn { font-family: var(--serif); font-weight: 600; font-size: 1.02rem; }
+  .km-lane .kmr { font-family: var(--mono); font-size: 10px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-faint); }
+  .km-lane .kmholds { min-height: 20px; margin-top: 9px; display: flex; flex-wrap: wrap; gap: 4px; justify-content: center; }
+  .km-hold { display: inline-flex; align-items: center; gap: 4px; font-family: var(--mono); font-size: 10.5px; font-weight: 600; padding: 2px 7px; border-radius: 999px; border: 1px solid; }
+  .km-hold svg { width: 10px; height: 10px; }
+  .km-stage { position: relative; height: 92px; margin: 8px 0 2px; }
+  .km-stage svg { position: absolute; inset: 0; width: 100%; height: 100%; overflow: visible; }
+  .km-guide { stroke: var(--border); stroke-width: 2; stroke-dasharray: 3 6; }
+  .km-line { stroke: var(--accent); stroke-width: 2.5; stroke-linecap: round; opacity: 0; transition: opacity .2s; }
+  .km-line.on { opacity: 1; }
+  .km-head { fill: var(--accent); opacity: 0; transition: opacity .2s; }
+  .km-head.on { opacity: 1; }
+  .km-packet { position: absolute; top: 50%; left: 0; transform: translate(-50%, -50%); white-space: nowrap; font-family: var(--mono); font-size: 12px; font-weight: 600; padding: 5px 10px; border-radius: 999px; border: 1px solid; background: var(--bg-3); box-shadow: var(--shadow); opacity: 0; pointer-events: none; display: inline-flex; align-items: center; gap: 5px; }
+  .km-packet svg { width: 12px; height: 12px; }
+  .km-packet.show { opacity: 1; }
+  .km-packet.move { transition: left .7s cubic-bezier(.45,.05,.35,1); }
+  .keymap-keys { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 6px; }
+  .keymap-keys .keychip { cursor: pointer; opacity: .5; filter: grayscale(.35); transition: opacity .18s, filter .18s, box-shadow .18s; }
+  .keymap-keys .keychip:hover { opacity: .85; filter: none; }
+  .keymap-keys .keychip.sel { opacity: 1; filter: none; box-shadow: 0 0 0 2px currentColor; }
+  .km-caption { margin-top: 14px; padding: 13px 15px; border-radius: 10px; background: var(--bg-3); border: 1px solid var(--border); font-size: 14.5px; color: var(--text-dim); line-height: 1.55; }
+  .km-caption b { color: var(--text); }
+  .km-caption .who { font-family: var(--mono); font-size: 12px; color: var(--accent); display: block; margin-bottom: 6px; }
+  @media (max-width: 620px) { .km-lane .kmr { display: none; } .km-packet { font-size: 11px; padding: 4px 8px; } }
+  @media (prefers-reduced-motion: reduce) { .km-packet.move { transition: none; } }
+
+  /* ============ ТЕРМИНЫ-ПОДСКАЗКИ ============ */
+  .term { border-bottom: 1px dashed color-mix(in srgb, var(--accent) 60%, transparent); cursor: help; }
+  .term:hover, .term:focus-visible { background: var(--accent-soft); outline: none; border-radius: 3px; }
+  .term-pop { position: absolute; z-index: 300; max-width: 290px; background: var(--bg-3); color: var(--text); border: 1px solid var(--border-2); border-radius: 10px; padding: 10px 13px; font-size: 13px; line-height: 1.45; box-shadow: var(--shadow); opacity: 0; transform: translateY(4px); transition: opacity .12s, transform .12s; pointer-events: none; }
+  .term-pop.show { opacity: 1; transform: none; }
+  .term-pop .tp-t { font-family: var(--mono); font-weight: 700; color: var(--accent); font-size: 12px; display: block; margin-bottom: 4px; }
+
   /* пояснительный блок */
   .callout { background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border)); border-radius: var(--r); padding: 22px 24px; margin-top: 26px; }
   .callout h3 { font-size: 1.25rem; margin-bottom: 12px; display: flex; align-items: center; gap: 10px; }
@@ -737,9 +778,13 @@
         <p class="caveat">Есть, впрочем, нюанс: сам ключ — секрет ничуть не слабее пароля. Если его вытащат прямо из памяти машины или доберутся до базы KDC — беда всё равно случится (об этом ниже, в разделе про атаки). Но именно по сети, именно во время входа, он не идёт — и в этом весь смысл конструкции.</p>
       </div>
 
-    <div style="margin-top:26px" class="card">
-      <h3 style="margin-bottom:14px">Легенда ключей — запомните цвета, они одни и те же на всём сайте</h3>
-      <div class="keylegend" id="keyLegend"></div>
+    <div class="keymap">
+      <h3 style="margin-bottom:6px">Пощупайте ключи: у кого какой и что куда движется</h3>
+      <p style="margin:0 0 16px;color:var(--text-dim);font-size:14px">Цвета запоминать не нужно. Выберите ключ внизу — увидите, у кого он есть (дорожки подсветятся) и как что-то, запертое этим ключом, путешествует между участниками.</p>
+      <div class="keymap-lanes" id="kmLanes"></div>
+      <div class="km-stage" id="kmStage"><svg id="kmSvg"></svg><div class="km-packet" id="kmPacket"></div></div>
+      <div class="keymap-keys" id="kmKeys"></div>
+      <div class="km-caption" id="kmCaption"></div>
     </div>
   </div>
 </section>
@@ -1274,11 +1319,7 @@ K_client = PBKDF2_HMAC_SHA1(пароль, <span class="k">соль</span>, <span
     return '<span class="keychip '+k.cls+'">'+lockSolid+k.code+'</span>';
   }
 
-  // легенда ключей
-  document.getElementById("keyLegend").innerHTML = Object.keys(KEYS).map(function (id) {
-    var k = KEYS[id];
-    return '<div class="item">'+chip(id)+'<div><b style="font-size:13.5px">'+k.name+'</b><div class="kdesc">'+k.desc+'</div></div></div>';
-  }).join("");
+  // (легенда ключей заменена на интерактивную «Карту ключей» — см. отдельный скрипт в конце файла)
 
   /* ---------- УЧАСТНИКИ ---------- */
   var clientIcon = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>';
@@ -2112,6 +2153,212 @@ K_client = PBKDF2_HMAC_SHA1(пароль, <span class="k">соль</span>, <span
   resetBtn.addEventListener("click", reset);
   postChk.addEventListener("change", reset);
   reset();
+})();
+</script>
+
+<script>
+/* ============ КАРТА КЛЮЧЕЙ (интерактив вместо легенды) ============ */
+(function () {
+  "use strict";
+  var stage = document.getElementById("kmStage"); if (!stage) return;
+  var reduce = window.matchMedia("(prefers-reduced-motion: reduce)").matches;
+  var lock = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>';
+  var icons = {
+    client: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="4"/><path d="M4 20c0-4 4-6 8-6s8 2 8 6"/></svg>',
+    kdc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="4" width="18" height="7" rx="1.5"/><rect x="3" y="13" width="18" height="7" rx="1.5"/><path d="M7 7.5h.01M7 16.5h.01"/></svg>',
+    svc: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="2"/><path d="M4 9h16M9 20V9"/></svg>'
+  };
+  var LANES = [
+    { id:"client", name:"Клиент", role:"вы + пароль" },
+    { id:"kdc",    name:"KDC",    role:"AS · TGS" },
+    { id:"svc",    name:"Служба", role:"цель" }
+  ];
+  var laneIdx = { client:0, kdc:1, svc:2 };
+  var KEYS = [
+    { id:"client", cls:"k-client", code:"K_client", holders:["client","kdc"], from:"client", to:"kdc", packet:"метка времени",
+      text:"<b>Ключ клиента</b> выведен из пароля. Одна и та же копия есть у клиента и у KDC — по сети он не ездит. Клиент шифрует им метку времени и шлёт KDC: расшифровать сможет только тот, у кого такой же ключ." },
+    { id:"sk1", cls:"k-sk1", code:"SK1", holders:["client","kdc"], from:"client", to:"kdc", packet:"аутентификатор",
+      text:"<b>SK1</b> — одноразовый сеансовый ключ между клиентом и TGS. Придумывает его KDC и вручает клиенту. Дальше клиент шифрует им аутентификатор — так он доказывает, что ключ у него на руках прямо сейчас." },
+    { id:"tgs", cls:"k-tgs", code:"K_TGS", holders:["kdc"], from:"kdc", to:"client", packet:"TGT",
+      text:"<b>K_TGS</b> (ключ учётки krbtgt) знает только KDC. Им запечатывается каждый TGT. Билет уезжает к клиенту, но открыть его тот не может — только принести обратно в KDC. Утечёт этот ключ — можно подделать любой билет." },
+    { id:"sk2", cls:"k-sk2", code:"SK2", holders:["client","svc"], from:"client", to:"svc", packet:"аутентификатор",
+      text:"<b>SK2</b> — сеансовый ключ между клиентом и службой. Его создаёт TGS и раздаёт обоим. Им клиент и служба защищают своё общение напрямую." },
+    { id:"service", cls:"k-service", code:"K_service", holders:["kdc","svc"], from:"kdc", to:"svc", packet:"ST",
+      text:"<b>K_service</b> выведен из пароля службы; копия есть у самой службы и у KDC. KDC запечатывает им билет (ST). Клиент несёт билет службе, но открыть его может только сама служба." }
+  ];
+
+  var lanesEl = document.getElementById("kmLanes");
+  lanesEl.innerHTML = LANES.map(function (l) {
+    return '<div class="km-lane" data-lane="' + l.id + '"><div class="kmi">' + icons[l.id] + '</div>' +
+      '<div class="kmn">' + l.name + '</div><div class="kmr">' + l.role + '</div>' +
+      '<div class="kmholds" data-holds="' + l.id + '"></div></div>';
+  }).join("");
+
+  var keysEl = document.getElementById("kmKeys");
+  keysEl.innerHTML = KEYS.map(function (k) {
+    return '<button type="button" class="keychip ' + k.cls + '" data-key="' + k.id + '">' + lock + k.code + '</button>';
+  }).join("");
+
+  var svg = document.getElementById("kmSvg");
+  var packet = document.getElementById("kmPacket");
+  var caption = document.getElementById("kmCaption");
+  var laneName = function (id) { return LANES[laneIdx[id]].name; };
+  var current = KEYS[0].id, animTimer = null;
+
+  function laneCX(i, W) { return W * (i * 2 + 1) / 6; }
+
+  function draw(k) {
+    var W = svg.clientWidth || stage.clientWidth || 600, H = svg.clientHeight || 92;
+    var s = "";
+    for (var i = 0; i < 3; i++) { var x = laneCX(i, W); s += '<line class="km-guide" x1="' + x + '" y1="10" x2="' + x + '" y2="' + (H - 10) + '"/>'; }
+    var fi = laneIdx[k.from], ti = laneIdx[k.to], fx = laneCX(fi, W), tx = laneCX(ti, W), y = H / 2;
+    var dir = tx > fx ? 1 : -1, hx = tx - dir * 9;
+    s += '<line class="km-line on" x1="' + fx + '" y1="' + y + '" x2="' + tx + '" y2="' + y + '"/>';
+    s += '<polygon class="km-head on" points="' + tx + ',' + y + ' ' + hx + ',' + (y - 5) + ' ' + hx + ',' + (y + 5) + '"/>';
+    svg.innerHTML = s;
+    // packet
+    var fracFrom = (fi * 2 + 1) / 6 * 100, fracTo = (ti * 2 + 1) / 6 * 100;
+    packet.className = "km-packet " + k.cls;
+    packet.innerHTML = lock + k.packet;
+    if (animTimer) { clearTimeout(animTimer); animTimer = null; }
+    packet.classList.remove("move");
+    packet.style.left = fracFrom + "%";
+    packet.classList.add("show");
+    if (reduce) { packet.style.left = fracTo + "%"; return; }
+    // force reflow, then animate
+    void packet.offsetWidth;
+    animTimer = setTimeout(function () { packet.classList.add("move"); packet.style.left = fracTo + "%"; }, 30);
+  }
+
+  function select(id) {
+    current = id;
+    var k = KEYS.filter(function (x) { return x.id === id; })[0]; if (!k) return;
+    lanesEl.querySelectorAll(".km-lane").forEach(function (el) { el.classList.toggle("hot", k.holders.indexOf(el.getAttribute("data-lane")) !== -1); });
+    LANES.forEach(function (l) {
+      var box = lanesEl.querySelector('[data-holds="' + l.id + '"]');
+      box.innerHTML = k.holders.indexOf(l.id) !== -1 ? '<span class="km-hold ' + k.cls + '">' + lock + k.code + '</span>' : "";
+    });
+    keysEl.querySelectorAll(".keychip").forEach(function (b) { b.classList.toggle("sel", b.getAttribute("data-key") === id); });
+    var who = k.holders.map(laneName).join(" и ");
+    caption.innerHTML = '<span class="who">🔑 есть у: ' + who + '</span>' + k.text;
+    draw(k);
+  }
+
+  keysEl.addEventListener("click", function (e) { var b = e.target.closest(".keychip"); if (b) select(b.getAttribute("data-key")); });
+  var rTimer = null;
+  window.addEventListener("resize", function () { clearTimeout(rTimer); rTimer = setTimeout(function () { var k = KEYS.filter(function (x) { return x.id === current; })[0]; if (k) draw(k); }, 150); }, { passive: true });
+  select(current);
+})();
+
+/* ============ ТЕРМИНЫ-ПОДСКАЗКИ (тап/наведение показывает расшифровку) ============ */
+(function () {
+  "use strict";
+  var TERMS = {
+    "KDC": "Key Distribution Center — доверенный центр Kerberos. Внутри две службы: AS и TGS.",
+    "AS": "Authentication Server — часть KDC: проверяет пароль (предаутентификацию) и выдаёт TGT.",
+    "TGS": "Ticket-Granting Server — часть KDC: обменивает TGT на билеты к конкретным сервисам.",
+    "TGT": "Ticket-Granting Ticket — «билет на билеты», основа единого входа. Запечатан ключом krbtgt.",
+    "ST": "Service Ticket — билет на конкретный сервис, запечатан ключом этого сервиса.",
+    "SPN": "Service Principal Name — имя сервиса, по которому клиент просит билет.",
+    "SK1": "Сеансовый ключ между клиентом и TGS. Одноразовый, создаёт KDC.",
+    "SK2": "Сеансовый ключ между клиентом и сервисом. Одноразовый, создаёт TGS.",
+    "K_TGS": "Ключ учётки krbtgt. Им KDC запечатывает каждый TGT. Знает только KDC.",
+    "K_client": "Ключ клиента, выведенный из пароля. Копия есть у клиента и у KDC.",
+    "K_service": "Ключ сервиса из пароля его учётки. Копия есть у сервиса и у KDC.",
+    "krbtgt": "Служебная учётка KDC; из её пароля выведен ключ K_TGS, которым подписаны все TGT.",
+    "realm": "Область Kerberos. В Active Directory совпадает с доменом, пишется заглавными.",
+    "nonce": "Одноразовое случайное число: связывает ответ именно с этим запросом.",
+    "string2key": "Односторонняя функция: пароль → ключ. Обратно, к паролю, вернуться нельзя.",
+    "SSO": "Single Sign-On, единый вход: пароль вводится один раз, дальше доступ идёт по билетам.",
+    "PAC": "Privilege Attribute Certificate — SID и группы пользователя внутри билета (авторизация).",
+    "FAST": "Armoring: защищённый канал для входа против офлайн-перебора пароля.",
+    "PKINIT": "Вход по сертификату или смарт-карте — асимметричная криптография на первом шаге.",
+    "kvno": "Key Version Number — номер версии ключа. KDC хранит текущую и предыдущую версии krbtgt.",
+    "etype": "Тип шифрования: 23 = RC4-HMAC, 17/18 = AES128/256, 1/3 = DES (устарел).",
+    "S4U2Self": "Сервис получает билет от имени пользователя, не входившего по Kerberos (protocol transition).",
+    "S4U2Proxy": "Сервис получает билет к разрешённому бэкенду от имени пользователя.",
+    "RBCD": "Resource-based constrained delegation: разрешение задаёт сам ресурс-приёмник.",
+    "gMSA": "Групповая управляемая сервисная учётка с автоматической сменой пароля.",
+    "LSASS": "Процесс Windows, в памяти которого хранятся активные билеты и секреты.",
+    "Referral-TGT": "Cross-realm TGT: пропуск к чужому KDC, зашифрован межреалмовым ключом доверия."
+  };
+
+  var order = Object.keys(TERMS).sort(function (a, b) { return b.length - a.length; });
+  function escRe(s) { return s.replace(/[.*+?^${}()|[\]\\]/g, "\\$&"); }
+  var body = "(" + order.map(escRe).join("|") + ")";
+  var re;
+  try { re = new RegExp("(?<![\\wА-Яа-яЁё])" + body + "(?![\\wА-Яа-яЁё])", "g"); }
+  catch (e) { re = new RegExp("\\b" + body + "\\b", "g"); }
+
+  var SKIP = "code, a, .term, .keychip, .inline-k, .keymap, .lab, #dpanel, #envelope, h1, h2, h3, summary, .km-caption, .missions";
+  var CAP = 12;
+
+  function processNode(node, seen, cap) {
+    var s = node.nodeValue, m, last = 0, frag = null;
+    re.lastIndex = 0;
+    while ((m = re.exec(s))) {
+      var term = m[1];
+      if (seen[term] || cap.n >= CAP) continue;
+      if (!frag) frag = document.createDocumentFragment();
+      if (m.index > last) frag.appendChild(document.createTextNode(s.slice(last, m.index)));
+      var span = document.createElement("span");
+      span.className = "term"; span.tabIndex = 0;
+      span.setAttribute("data-term", term); span.setAttribute("data-def", TERMS[term]);
+      span.textContent = term;
+      frag.appendChild(span);
+      last = m.index + term.length;
+      seen[term] = true; cap.n++;
+    }
+    if (frag) { if (last < s.length) frag.appendChild(document.createTextNode(s.slice(last))); node.parentNode.replaceChild(frag, node); }
+  }
+
+  document.querySelectorAll("main section:not(#glossary)").forEach(function (sec) {
+    var seen = {}, cap = { n: 0 };
+    var walker = document.createTreeWalker(sec, NodeFilter.SHOW_TEXT, {
+      acceptNode: function (n) {
+        if (!n.nodeValue || !n.nodeValue.trim()) return NodeFilter.FILTER_REJECT;
+        if (n.parentElement && n.parentElement.closest(SKIP)) return NodeFilter.FILTER_REJECT;
+        return NodeFilter.FILTER_ACCEPT;
+      }
+    });
+    var nodes = [], nn;
+    while ((nn = walker.nextNode())) nodes.push(nn);
+    nodes.forEach(function (n) { if (cap.n < CAP) processNode(n, seen, cap); });
+  });
+
+  /* поповер */
+  var pop = document.createElement("div");
+  pop.className = "term-pop";
+  pop.innerHTML = '<span class="tp-t"></span><span class="tp-d"></span>';
+  document.body.appendChild(pop);
+  var tpT = pop.querySelector(".tp-t"), tpD = pop.querySelector(".tp-d");
+  var pinned = false, hideTimer = null;
+
+  function showPop(el) {
+    clearTimeout(hideTimer);
+    tpT.textContent = el.getAttribute("data-term");
+    tpD.textContent = el.getAttribute("data-def");
+    pop.classList.add("show");
+    var r = el.getBoundingClientRect(), pr = pop.getBoundingClientRect();
+    var sx = window.pageXOffset, sy = window.pageYOffset, vw = document.documentElement.clientWidth;
+    var top = sy + r.top - pr.height - 8;
+    if (r.top - pr.height - 8 < 4) top = sy + r.bottom + 8;
+    var left = sx + r.left + r.width / 2 - pr.width / 2;
+    left = Math.max(sx + 8, Math.min(left, sx + vw - pr.width - 8));
+    pop.style.top = top + "px"; pop.style.left = left + "px";
+  }
+  function hidePop() { hideTimer = setTimeout(function () { pop.classList.remove("show"); }, 80); }
+
+  document.addEventListener("mouseover", function (e) { var t = e.target.closest && e.target.closest(".term"); if (t) showPop(t); });
+  document.addEventListener("mouseout", function (e) { var t = e.target.closest && e.target.closest(".term"); if (t && !pinned) hidePop(); });
+  document.addEventListener("focusin", function (e) { var t = e.target.closest && e.target.closest(".term"); if (t) showPop(t); });
+  document.addEventListener("focusout", function (e) { var t = e.target.closest && e.target.closest(".term"); if (t && !pinned) hidePop(); });
+  document.addEventListener("click", function (e) {
+    var t = e.target.closest && e.target.closest(".term");
+    if (t) { e.preventDefault(); pinned = true; showPop(t); }
+    else if (!(e.target.closest && e.target.closest(".term-pop"))) { pinned = false; pop.classList.remove("show"); }
+  });
+  window.addEventListener("scroll", function () { pinned = false; pop.classList.remove("show"); }, { passive: true });
 })();
 </script>
 
