@@ -264,9 +264,8 @@
   /* ============ ТЕРМИНЫ-ПОДСКАЗКИ ============ */
   .gterm { border-bottom: 1px dashed color-mix(in srgb, var(--accent) 60%, transparent); cursor: help; }
   .gterm:hover, .gterm:focus-visible { background: var(--accent-soft); outline: none; border-radius: 3px; }
-  .term-pop { position: absolute; z-index: 300; max-width: 290px; background: var(--bg-3); color: var(--text); border: 1px solid var(--border-2); border-radius: 10px; padding: 10px 13px; font-size: 13px; line-height: 1.45; box-shadow: var(--shadow); opacity: 0; transform: translateY(4px); transition: opacity .12s, transform .12s; pointer-events: none; }
+  .term-pop { position: fixed; top: 0; left: 0; z-index: 300; max-width: 300px; background: var(--bg-3); color: var(--text-dim); border: 1px solid var(--border-2); border-radius: 10px; padding: 9px 12px; font-size: 13px; line-height: 1.45; box-shadow: var(--shadow); opacity: 0; transform: translateY(4px); transition: opacity .12s, transform .12s; pointer-events: none; }
   .term-pop.show { opacity: 1; transform: none; }
-  .term-pop .tp-t { font-family: var(--mono); font-weight: 700; color: var(--accent); font-size: 12px; display: block; margin-bottom: 4px; }
 
   /* пояснительный блок */
   .callout { background: var(--accent-soft); border: 1px solid color-mix(in srgb, var(--accent) 30%, var(--border)); border-radius: var(--r); padding: 22px 24px; margin-top: 26px; }
@@ -2315,39 +2314,25 @@ K_client = PBKDF2_HMAC_SHA1(пароль, <span class="k">соль</span>, <span
     nodes.forEach(function (n) { if (cap.n < CAP) processNode(n, seen, cap); });
   });
 
-  /* поповер */
+  /* поповер: определение при наведении или фокусе (десктоп) */
   var pop = document.createElement("div");
   pop.className = "term-pop";
-  pop.innerHTML = '<span class="tp-t"></span><span class="tp-d"></span>';
   document.body.appendChild(pop);
-  var tpT = pop.querySelector(".tp-t"), tpD = pop.querySelector(".tp-d");
-  var pinned = false, hideTimer = null;
-
   function showPop(el) {
-    clearTimeout(hideTimer);
-    tpT.textContent = el.getAttribute("data-term");
-    tpD.textContent = el.getAttribute("data-def");
+    pop.textContent = el.getAttribute("data-def");
     pop.classList.add("show");
     var r = el.getBoundingClientRect(), pr = pop.getBoundingClientRect();
-    var sx = window.pageXOffset, sy = window.pageYOffset, vw = document.documentElement.clientWidth;
-    var top = sy + r.top - pr.height - 8;
-    if (r.top - pr.height - 8 < 4) top = sy + r.bottom + 8;
-    var left = sx + r.left + r.width / 2 - pr.width / 2;
-    left = Math.max(sx + 8, Math.min(left, sx + vw - pr.width - 8));
+    var vw = document.documentElement.clientWidth;
+    var top = r.top - pr.height - 8;
+    if (top < 6) top = r.bottom + 8;                                             // не влезает сверху — под словом
+    var left = Math.min(Math.max(8, r.left + r.width / 2 - pr.width / 2), vw - pr.width - 8);  // держим в пределах экрана
     pop.style.top = top + "px"; pop.style.left = left + "px";
   }
-  function hidePop() { hideTimer = setTimeout(function () { pop.classList.remove("show"); }, 80); }
-
-  document.addEventListener("mouseover", function (e) { var t = e.target.closest && e.target.closest(".gterm"); if (t) showPop(t); });
-  document.addEventListener("mouseout", function (e) { var t = e.target.closest && e.target.closest(".gterm"); if (t && !pinned) hidePop(); });
-  document.addEventListener("focusin", function (e) { var t = e.target.closest && e.target.closest(".gterm"); if (t) showPop(t); });
-  document.addEventListener("focusout", function (e) { var t = e.target.closest && e.target.closest(".gterm"); if (t && !pinned) hidePop(); });
-  document.addEventListener("click", function (e) {
-    var t = e.target.closest && e.target.closest(".gterm");
-    if (t) { e.preventDefault(); pinned = true; showPop(t); }
-    else if (!(e.target.closest && e.target.closest(".term-pop"))) { pinned = false; pop.classList.remove("show"); }
-  });
-  window.addEventListener("scroll", function () { pinned = false; pop.classList.remove("show"); }, { passive: true });
+  function hidePop() { pop.classList.remove("show"); }
+  document.addEventListener("mouseover", function (e) { var t = e.target.closest(".gterm"); if (t) showPop(t); });
+  document.addEventListener("mouseout", function (e) { var t = e.target.closest(".gterm"); if (t) hidePop(); });
+  document.addEventListener("focusin", function (e) { var t = e.target.closest(".gterm"); if (t) showPop(t); });
+  document.addEventListener("focusout", function (e) { var t = e.target.closest(".gterm"); if (t) hidePop(); });
 })();
 </script>
 
