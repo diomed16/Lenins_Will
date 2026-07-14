@@ -252,8 +252,8 @@
   @media (prefers-reduced-motion: reduce) { .km-packet.move { transition: none; } }
 
   /* ============ ТЕРМИНЫ-ПОДСКАЗКИ ============ */
-  .term { border-bottom: 1px dashed color-mix(in srgb, var(--accent) 60%, transparent); cursor: help; }
-  .term:hover, .term:focus-visible { background: var(--accent-soft); outline: none; border-radius: 3px; }
+  .gterm { border-bottom: 1px dashed color-mix(in srgb, var(--accent) 60%, transparent); cursor: help; }
+  .gterm:hover, .gterm:focus-visible { background: var(--accent-soft); outline: none; border-radius: 3px; }
   .term-pop { position: absolute; z-index: 300; max-width: 290px; background: var(--bg-3); color: var(--text); border: 1px solid var(--border-2); border-radius: 10px; padding: 10px 13px; font-size: 13px; line-height: 1.45; box-shadow: var(--shadow); opacity: 0; transform: translateY(4px); transition: opacity .12s, transform .12s; pointer-events: none; }
   .term-pop.show { opacity: 1; transform: none; }
   .term-pop .tp-t { font-family: var(--mono); font-weight: 700; color: var(--accent); font-size: 12px; display: block; margin-bottom: 4px; }
@@ -2290,7 +2290,7 @@ K_client = PBKDF2_HMAC_SHA1(пароль, <span class="k">соль</span>, <span
   try { re = new RegExp("(?<![\\wА-Яа-яЁё])" + body + "(?![\\wА-Яа-яЁё])", "g"); }
   catch (e) { re = new RegExp("\\b" + body + "\\b", "g"); }
 
-  var SKIP = "code, a, .term, .keychip, .inline-k, .keymap, .lab, #dpanel, #envelope, h1, h2, h3, summary, .km-caption, .missions";
+  var SKIP = "code, a, .gterm, .keychip, .inline-k, .keymap, .lab, #dpanel, #envelope, h1, h2, h3, summary, .km-caption, .missions";
   var CAP = 12;
 
   function processNode(node, seen, cap) {
@@ -2302,7 +2302,7 @@ K_client = PBKDF2_HMAC_SHA1(пароль, <span class="k">соль</span>, <span
       if (!frag) frag = document.createDocumentFragment();
       if (m.index > last) frag.appendChild(document.createTextNode(s.slice(last, m.index)));
       var span = document.createElement("span");
-      span.className = "term"; span.tabIndex = 0;
+      span.className = "gterm"; span.tabIndex = 0;
       span.setAttribute("data-term", term); span.setAttribute("data-def", TERMS[term]);
       span.textContent = term;
       frag.appendChild(span);
@@ -2349,12 +2349,12 @@ K_client = PBKDF2_HMAC_SHA1(пароль, <span class="k">соль</span>, <span
   }
   function hidePop() { hideTimer = setTimeout(function () { pop.classList.remove("show"); }, 80); }
 
-  document.addEventListener("mouseover", function (e) { var t = e.target.closest && e.target.closest(".term"); if (t) showPop(t); });
-  document.addEventListener("mouseout", function (e) { var t = e.target.closest && e.target.closest(".term"); if (t && !pinned) hidePop(); });
-  document.addEventListener("focusin", function (e) { var t = e.target.closest && e.target.closest(".term"); if (t) showPop(t); });
-  document.addEventListener("focusout", function (e) { var t = e.target.closest && e.target.closest(".term"); if (t && !pinned) hidePop(); });
+  document.addEventListener("mouseover", function (e) { var t = e.target.closest && e.target.closest(".gterm"); if (t) showPop(t); });
+  document.addEventListener("mouseout", function (e) { var t = e.target.closest && e.target.closest(".gterm"); if (t && !pinned) hidePop(); });
+  document.addEventListener("focusin", function (e) { var t = e.target.closest && e.target.closest(".gterm"); if (t) showPop(t); });
+  document.addEventListener("focusout", function (e) { var t = e.target.closest && e.target.closest(".gterm"); if (t && !pinned) hidePop(); });
   document.addEventListener("click", function (e) {
-    var t = e.target.closest && e.target.closest(".term");
+    var t = e.target.closest && e.target.closest(".gterm");
     if (t) { e.preventDefault(); pinned = true; showPop(t); }
     else if (!(e.target.closest && e.target.closest(".term-pop"))) { pinned = false; pop.classList.remove("show"); }
   });
